@@ -40,6 +40,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/FakeFlashDeviceTest.o \
 	${OBJECTDIR}/FlashDeviceRegionTest.o \
 	${OBJECTDIR}/FlashDeviceTest.o \
+	${OBJECTDIR}/FlasheeTest.o \
 	${OBJECTDIR}/LogicalPageMapperTest.o \
 	${OBJECTDIR}/MultiWriteFlashStoreTest.o \
 	${OBJECTDIR}/PageSpanFlashDeviceTest.o \
@@ -96,6 +97,11 @@ ${OBJECTDIR}/FlashDeviceTest.o: FlashDeviceTest.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/FlashDeviceTest.o FlashDeviceTest.cpp
+
+${OBJECTDIR}/FlasheeTest.o: FlasheeTest.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/FlasheeTest.o FlasheeTest.cpp
 
 ${OBJECTDIR}/LogicalPageMapperTest.o: LogicalPageMapperTest.cpp 
 	${MKDIR} -p ${OBJECTDIR}

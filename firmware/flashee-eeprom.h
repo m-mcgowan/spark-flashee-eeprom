@@ -1582,6 +1582,8 @@ private:
         if (freePageCount < 2 || freePageCount >= ((endAddress - startAddress) / userRegion.pageSize()))
             return NULL;
         FlashDevice* userFlash = createUserFlashRegion(startAddress, endAddress);
+        if (userFlash==NULL)
+            return NULL;
         FlashDevice* mapper = createLogicalPageMapper(userFlash, userFlash->pageCount() - freePageCount);
         return mapper;
     }
