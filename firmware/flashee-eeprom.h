@@ -1536,7 +1536,7 @@ public:
      *
      * @return
      */
-    static FlashDevice* createMultiPageErase(flash_addr_t startAddress=0, flash_addr_t endAddress=flash_addr(-1), page_count_t freePageCount=2) {
+    static FlashDevice* createMultiPageErase(flash_addr_t startAddress=0, flash_addr_t endAddress=flash_addr_t(-1), page_count_t freePageCount=2) {
         FlashDevice* mapper = createMultiPageEraseImpl(startAddress, endAddress, freePageCount);
         return mapper==NULL ? NULL : new PageSpanFlashDevice(*mapper);
     }
@@ -1550,7 +1550,7 @@ public:
      * @param pageCount
      * @return
      */
-    static FlashDevice* createAddressErase(flash_addr_t startAddress=0, flash_addr_t endAddress=flash_addr(-1), page_count_t freePageCount=2) {
+    static FlashDevice* createAddressErase(flash_addr_t startAddress=0, flash_addr_t endAddress=flash_addr_t(-1), page_count_t freePageCount=2) {
         FlashDevice* mapper = createMultiPageEraseImpl(startAddress, endAddress, freePageCount);
         if (mapper==NULL)
             return NULL;
