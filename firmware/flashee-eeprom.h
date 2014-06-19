@@ -69,6 +69,19 @@ public:
         return pageAddress(pageCount());
     }
 
+    inline bool write(const void* data, flash_addr_t address, page_size_t length) {
+        writeErasePage(data, address, length);
+    }
+    
+    inline bool read(void* data, flash_addr_t address, page_size_t length) {
+        readPage(data, address, length);
+    }
+
+    inline bool writeString(const char* s, flash_addr_t address) {
+        write(s, address, strlen(s));
+    }
+
+    
     /**
      * Converts a page index [0,N) into the corresponding read/write address.
      * @param page  The page to convert to an address.
@@ -1481,6 +1494,8 @@ private:
     }
 
     inline static FlashDevice* createMultiPageEraseImpl(flash_addr_t startAddress, flash_addr_t endAddress, page_count_t freePageCount) {
+        if (endAddress==flash_addr_t(-1))
+            endAddress = startAddress+userRegion.pageAddress(256);
         if (freePageCount<2 || freePageCount>=((endAddress-startAddress)/userRegion.pageSize()))
             return NULL;
         FlashDevice* userFlash = createUserFlashRegion(startAddress, endAddress);
@@ -1521,7 +1536,7 @@ public:
      *
      * @return
      */
-    static FlashDevice* createMultiPageErase(flash_addr_t startAddress, flash_addr_t endAddress, page_count_t freePageCount) {
+    static FlashDevice* createMultiPageErase(flash_addr_t startAddress=0, flash_addr_t endAddress=flash_addr(-1), page_count_t freePageCount=2) {
         FlashDevice* mapper = createMultiPageEraseImpl(startAddress, endAddress, freePageCount);
         return mapper==NULL ? NULL : new PageSpanFlashDevice(*mapper);
     }
@@ -1535,7 +1550,7 @@ public:
      * @param pageCount
      * @return
      */
-    static FlashDevice* createAddressErase(flash_addr_t startAddress, flash_addr_t endAddress, page_count_t freePageCount) {
+    static FlashDevice* createAddressErase(flash_addr_t startAddress=0, flash_addr_t endAddress=flash_addr(-1), page_count_t freePageCount=2) {
         FlashDevice* mapper = createMultiPageEraseImpl(startAddress, endAddress, freePageCount);
         if (mapper==NULL)
             return NULL;
