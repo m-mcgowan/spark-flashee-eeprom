@@ -22,6 +22,8 @@
 #endif
 #include "flashee-eeprom.h"
 
+namespace Flashee {
+
 FlashDevice::~FlashDevice() { }
 
 #ifdef SPARK
@@ -30,7 +32,7 @@ FlashDevice::~FlashDevice() { }
     static FakeFlashDevice directFlash(384, 4096);
 #endif
 
-FlashDeviceRegion Flashee::userRegion(directFlash, 0x80000, 0x200000);
+FlashDeviceRegion flashee::userRegion(directFlash, 0x80000, 0x200000);
 
 
 /**
@@ -55,3 +57,5 @@ bool FlashDevice::comparePage(const void* data, flash_addr_t address, page_size_
     return offset==length;
 }
 #endif
+
+}

@@ -19,6 +19,8 @@
 #include "gmock/gmock.h"
 #include "flashee-eeprom.h"
 
+using namespace Flashee;
+
 // NB: The FakeFlashDevice is initially random content.
 // And the LogicalPageMapperImpl doesn't initialize the storage either.
 TEST(LogicalPageMapperTest, PageIsDurty_Small) {

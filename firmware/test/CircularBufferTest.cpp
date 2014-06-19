@@ -17,8 +17,9 @@
 
 #include "gtest/gtest.h"
 #include "flashee-eeprom.h"
-
 #include "Generators.h"
+
+using namespace Flashee;
 
 class CircularBufferTest : public ::testing::Test {
     

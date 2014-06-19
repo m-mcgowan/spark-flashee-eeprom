@@ -18,6 +18,8 @@
 #include "gtest/gtest.h"
 #include "flashee-eeprom.h"
 
+using namespace Flashee;
+
 TEST(FakeFlashDeviceTest, CorrectSize) {
     FakeFlashDevice mock(100, 202);
     ASSERT_EQ(20200, mock.length());

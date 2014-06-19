@@ -18,9 +18,10 @@
 #ifndef _FLASHEE_EEPROM_H_
 #define _FLASHEE_EEPROM_H_
 
-
 #include "string.h"
 #include "stdlib.h"
+
+namespace Flashee {
 
 typedef uint32_t flash_addr_t;
 typedef uint32_t page_size_t;
@@ -1559,7 +1560,7 @@ class SparkExternalFlashDevice : public FlashDevice {
 };
 #endif // SPARK
 
-class Flashee {
+class flashee {
 private:
     static FlashDeviceRegion userRegion;
 
@@ -1655,5 +1656,6 @@ public:
     }
 };
 
+} // namespace
 
 #endif

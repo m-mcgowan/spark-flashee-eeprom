@@ -19,6 +19,8 @@
 #include "gmock/gmock.h"
 #include "flashee-eeprom.h"
 
+using namespace Flashee;
+
 TEST(MultiWriteSlotAccess, readSlot_uninitlaized) {
     uint8_t slot[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
     ASSERT_EQ(0xFF, MultiWriteSlotAccess::readSlot(slot));

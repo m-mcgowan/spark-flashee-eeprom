@@ -21,6 +21,8 @@
 #include "gmock/gmock.h"
 #include "flashee-eeprom.h"
 
+using namespace Flashee;
+
 class MockFlashDevice : public FlashDevice {
 public:        
 

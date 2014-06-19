@@ -24,6 +24,8 @@
 #include "Generators.h"
 #include <memory>
 
+using namespace Flashee;
+
 /**
  * Generator function to produce the flash device for each instance of the test
  * suite. 
