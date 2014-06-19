@@ -38,6 +38,16 @@ FlashDevice* CreateFlashDevice<MultiWriteFlashStore>() {
     return eeprom;
 }
 
+template <>
+FlashDevice* CreateFlashDevice<SinglePageWear>() {
+    FakeFlashDevice* storage = new FakeFlashDevice(256, 4096);  // has to have at least two pages more    
+    SinglePageWear* eeprom = new SinglePageWear(*storage);
+    return eeprom;
+}
+
+
+
 INSTANTIATE_TYPED_TEST_CASE_P(Fake, FlashDeviceTest, FakeFlashDevice);
 INSTANTIATE_TYPED_TEST_CASE_P(FakeLogicalMapper, FlashDeviceTest, LogicalPageMapper<>);
 INSTANTIATE_TYPED_TEST_CASE_P(FakeEepromEmulation, FlashDeviceTest, MultiWriteFlashStore);
+INSTANTIATE_TYPED_TEST_CASE_P(FakeSinglePageWear, FlashDeviceTest, SinglePageWear);

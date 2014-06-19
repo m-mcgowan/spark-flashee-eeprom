@@ -22,18 +22,13 @@ using ::testing::InSequence;
 using ::testing::Return;
 using ::testing::_;
     
-class PageSpanFlashDeviceTest : public ::testing::Test {
+class PageSpanFlashDeviceTest : public MockFlashDeviceTest {
 public:    
 
-    MockFlashDevice mock;
     PageSpanFlashDevice span;    
 
     PageSpanFlashDeviceTest() : span(mock) {}
     
-    void mockPageSizeCount(page_size_t size, page_count_t count) {
-        EXPECT_CALL(mock, pageSize()).WillRepeatedly(Return(size));
-        EXPECT_CALL(mock, pageCount()).WillRepeatedly(Return(count));
-    }
 };
 
 // these are simple delegate methods. Here we just validate that the arguments

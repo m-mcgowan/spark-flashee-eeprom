@@ -4,6 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>Generators.h</itemPath>
       <itemPath>MockFlashDevice.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
@@ -21,6 +22,7 @@
       <itemPath>LogicalPageMapperTest.cpp</itemPath>
       <itemPath>MultiWriteFlashStoreTest.cpp</itemPath>
       <itemPath>PageSpanFlashDeviceTest.cpp</itemPath>
+      <itemPath>SinglePageWearTest.cpp</itemPath>
       <itemPath>../flashee-eeprom.cpp</itemPath>
       <itemPath>gmock-gtest-all.cc</itemPath>
       <itemPath>main.cpp</itemPath>
@@ -54,7 +56,7 @@
             <pElem>..</pElem>
             <pElem>.</pElem>
           </incDir>
-          <commandLine>-static-libgcc -static-libstdc++</commandLine>
+          <commandLine>-static-libgcc -static-libstdc++ -std=gnu++11</commandLine>
         </ccTool>
       </compileType>
       <item path="../flashee-eeprom.cpp" ex="false" tool="1" flavor2="0">
@@ -69,6 +71,8 @@
       </item>
       <item path="FlashDeviceTest.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="Generators.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="LogicalPageMapperTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="MockFlashDevice.h" ex="false" tool="3" flavor2="0">
@@ -76,6 +80,8 @@
       <item path="MultiWriteFlashStoreTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="PageSpanFlashDeviceTest.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SinglePageWearTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="gmock-gtest-all.cc" ex="false" tool="1" flavor2="0">
       </item>
@@ -114,6 +120,8 @@
       </item>
       <item path="FlashDeviceTest.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="Generators.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="LogicalPageMapperTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="MockFlashDevice.h" ex="false" tool="3" flavor2="0">
@@ -121,6 +129,8 @@
       <item path="MultiWriteFlashStoreTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="PageSpanFlashDeviceTest.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SinglePageWearTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="gmock-gtest-all.cc" ex="false" tool="1" flavor2="0">
       </item>

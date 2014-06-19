@@ -21,7 +21,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "flashee-eeprom.h"
-
+#include "Generators.h"
 #include <memory>
 
 /**
@@ -30,41 +30,6 @@
  */
 template <class T> FlashDevice* CreateFlashDevice();
 template <class T> bool SupportsWriteErase() { return true; }
-
-class Generator {
-public:
-    virtual uint8_t next()=0;    
-};
-
-
-class ValueGenerator : public Generator {
-protected:    
-    uint8_t _value;
-public:
-    ValueGenerator(uint8_t value) : _value(value) {}
-    
-    uint8_t next() { return _value; }
-};
-
-
-class SequenceGenerator : public ValueGenerator {
-public:    
-    SequenceGenerator(uint8_t startValue) : ValueGenerator(startValue) {}
-    uint8_t next() { return _value++; }
-};
-
-
-#ifdef __GXX_EXPERIMENTAL_CXX0X__
-
-#include <random>
-class RandomGenerator : public Generator {
-    std::default_random_engine generator;
-    std::uniform_int_distribution<uint8_t> distribution;
-public:
-    RandomGenerator(int seed) : generator(seed), distribution(0,255) {}    
-    uint8_t next() { return distribution(generator); }
-};
-#endif
 
 template <typename T> 
 class FlashDeviceTest :  public ::testing::Test {

@@ -43,6 +43,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/LogicalPageMapperTest.o \
 	${OBJECTDIR}/MultiWriteFlashStoreTest.o \
 	${OBJECTDIR}/PageSpanFlashDeviceTest.o \
+	${OBJECTDIR}/SinglePageWearTest.o \
 	${OBJECTDIR}/gmock-gtest-all.o \
 	${OBJECTDIR}/main.o
 
@@ -51,8 +52,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-static-libgcc -static-libstdc++
-CXXFLAGS=-static-libgcc -static-libstdc++
+CCFLAGS=-static-libgcc -static-libstdc++ -std=gnu++11
+CXXFLAGS=-static-libgcc -static-libstdc++ -std=gnu++11
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -110,6 +111,11 @@ ${OBJECTDIR}/PageSpanFlashDeviceTest.o: PageSpanFlashDeviceTest.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/PageSpanFlashDeviceTest.o PageSpanFlashDeviceTest.cpp
+
+${OBJECTDIR}/SinglePageWearTest.o: SinglePageWearTest.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SinglePageWearTest.o SinglePageWearTest.cpp
 
 ${OBJECTDIR}/gmock-gtest-all.o: gmock-gtest-all.cc 
 	${MKDIR} -p ${OBJECTDIR}
