@@ -43,7 +43,7 @@ void loop()
                 Serial.println("Running tests");
                 run = true;
                 // allocate the maximum size possible. At present this is 256 pages, keeping 2 free pages.
-                test = new FlashDeviceTest(Flashee::createAddressErase(0, 4096*256, 2));
+                test = new FlashDeviceTest(flashee::createAddressErase(0, 4096*256, 2));
                 if (test==NULL)
                     Serial.println("Cannot allocate test harness");
             }

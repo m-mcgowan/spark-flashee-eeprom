@@ -255,7 +255,7 @@ test(RepeatedEraseWritePreservesRestOfPage) {
  * Then part of the page is overwritten, and the sequence is still verified.
  */
 test(SparkFlashCanWriteOddBytes) {
-    FlashDevice& flash = Flashee::userFlash();
+    FlashDevice& flash = flashee::userFlash();
     FlashDeviceTest driver(&flash);
     // since the direct spark flash doesn't support erase write, just use a normal write, which ANDs with the existing content.
     // Existing content byte is the page offset & 0xFF.
@@ -263,13 +263,13 @@ test(SparkFlashCanWriteOddBytes) {
 }
 
 test(SparkFlashCanWriteEvenAddressBytes) {
-    FlashDevice& flash = Flashee::userFlash();
+    FlashDevice& flash = flashee::userFlash();
     FlashDeviceTest driver(&flash);
     driver.assertWritePageOffsetLength(10, 4, as_bytes("\x08" "\x0A" "\x04" "\x01"));
 }
 
 test(SparkFlashCanWriteEvenAddressBytesOddLength) {
-    FlashDevice& flash = Flashee::userFlash();
+    FlashDevice& flash = flashee::userFlash();
     FlashDeviceTest driver(&flash);
     driver.assertWritePageOffsetLength(10, 4, as_bytes("\x08" "\x0A" "\x04"));
 }
