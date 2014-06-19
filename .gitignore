@@ -19,3 +19,5 @@
 *.exe
 *.out
 *.app
+firmware/test/build/
+firmware/test/nbproject/private/

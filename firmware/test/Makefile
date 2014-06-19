@@ -100,14 +100,7 @@ build-tests: .build-tests-post
 # Add your post 'build-tests' code here...
 
 
-# run tests
-test: .test-post
 
-.test-pre: build-tests
-# Add your pre 'test' code here...
-
-.test-post: .test-impl
-# Add your post 'test' code here...
 
 
 # help
@@ -118,11 +111,16 @@ help: .help-post
 
 .help-post: .help-impl
 # Add your post 'help' code here...
-
-
+    
 
 # include project implementation makefile
 include nbproject/Makefile-impl.mk
 
 # include project make variables
 include nbproject/Makefile-variables.mk
+
+
+# run tests
+test: build
+	@echo "Running tests"
+	"$(CND_ARTIFACT_PATH_Debug)"
