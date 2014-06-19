@@ -500,7 +500,6 @@ THE SOFTWARE.
 */
 
 #include <stdint.h>
-#include <Print.h>
 
 #if ARDUINO >= 100 && ARDUINO < 103
 #undef F
