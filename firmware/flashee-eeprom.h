@@ -70,15 +70,15 @@ public:
     }
 
     inline bool write(const void* data, flash_addr_t address, page_size_t length) {
-        writeErasePage(data, address, length);
+        return writeErasePage(data, address, length);
     }
     
     inline bool read(void* data, flash_addr_t address, page_size_t length) {
-        readPage(data, address, length);
+        return readPage(data, address, length);
     }
 
     inline bool writeString(const char* s, flash_addr_t address) {
-        write(s, address, strlen(s));
+        return write(s, address, strlen(s));
     }
 
     
