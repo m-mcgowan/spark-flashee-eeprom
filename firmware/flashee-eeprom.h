@@ -18,6 +18,14 @@
 #ifndef _FLASHEE_EEPROM_H_
 #define _FLASHEE_EEPROM_H_
 
+#ifdef SPARK 
+#include "application.h"
+#else
+#include <stdint.h>
+#endif
+#include "flashee-eeprom.h"
+
+
 #include "string.h"
 #include "stdlib.h"
 
