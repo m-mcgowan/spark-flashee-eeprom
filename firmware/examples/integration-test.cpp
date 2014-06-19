@@ -24,7 +24,7 @@
 #include <memory>
 
 #include "flashee-eeprom/flashee-eeprom.h"
-#include "flashee-eeprom/spark_unit.h"
+#include "flashee-eeprom/spark-unit.h"
 
 class Generator {
 public:
