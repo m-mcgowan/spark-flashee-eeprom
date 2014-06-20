@@ -15,45 +15,145 @@ cycles over the lifetime of the device.
 
 Key features:
 
-- provides persistent storage using the external 1.5MB user flash on the spark
-- EEPROM-like access - no need to worry about erasing pages to ensure data integrity.
+- Provides persistent storage using the external 1.5MB user flash on the spark
+- EEPROM-like access - (byte erasable) no need to worry about erasing pages to ensure data integrity.
 - 3 different types of eeprom emulations providing speed/erase cycle tradeoff.
-- wear levelling and page allocation on demand
+- Wear levelling and page allocation on demand for increased endurance
+- Circular buffers for logs, temporary data etc.
 
 Getting Started
 ===============
 
+To use the library in application code, include the header file and import the namespace:
+
+```c++
+    #include "flashee-eeprom/flashee-eeprom.h"
+    using namespace Flashee;
+```
+
 To create the flash object:
 
-    FlashDevice* flash = Flashee::createAddressErase();
+```c++
+    FlashDevice* flash = Devices::createAddressErase();
+```
 
-This allocates all pages in the external flash for writing using a scheme that emulates erases on individual addresses.
+This reserves all pages in the external flash for a flash device that provides byte-level erases. This offers
+the best erase cycle count at the cost of an 8x overhead.
+
+Another eeprom emulation scheme is basic wear levelling:
+
+```c++
+    FlashDevice* flash = Devices::createWearLevelErase();
+```
+
+This uses wear levelling to spread the erases out over the flash region. Each write to the flash - or specifically
+each write that changes a 0 to a 1, will cause a page erase.
 
 To store data:
 
+```c++
     flash->writeString("Hello World!", 0);
+```
 
 This writes the string to the flash memory starting at address 0.
 
 To retrieve data:
 
+```c++
     char buf[13];
     flash->read(buf, 0, 13);
+```
 
 So far, this is just like the regular sFLASH access functions that are available in the spark core API.
 Where this library is different is that you can freely
 overwrite the data, just by issuing another write command:
 
+```c++
     flash->writeString("I think I changed my mind!", 0);
+```
 
 If you're not storing strings but simply data buffers, binary writes are supported:
 
+```c++
     flash->write(&my_struct, 123, sizeof(my_struct));
+```
 
-
-The key difference between flash and eeprom is that with flash memory you cannot erase a single byte, but have to
+The key difference between flash and eeprom is that with flash memory you cannot normally erase a single byte, but have to
 erase a whole page. This library takes care of that, and presents an interface to the flash device that makes it
-behave like eeprom.
+behave like eeprom, which does support rewrites of data without having to perform a page erase.
+
+
+Circular Buffers
+================
+
+The library provides a [circular buffer](http://en.wikipedia.org/wiki/Circular_buffer) implementation that
+allows data to be written to a storage device and subsequently read out again.
+
+To create a circular buffer, specify the start and end address (as usual, these should be on page boundaries):
+
+```c++
+    CircularBuffer* buffer = Devices::createCircularBuffer(4096*256, 4096*384);
+```
+
+This will create a circular buffer from page 256 through to page 384 (0.5MB).
+
+Writing to the buffer:
+```c++
+    MyStruct data = ...;
+    bool success = buffer->write(&data, sizeof(data));
+```
+
+If there is not room in the buffer for the complete block, the call fails and returns `false`.
+
+Reading from the buffer:
+
+```c++
+    MyStruct data = ...;
+    bool success = buffer->read(&data, sizeof(data));
+
+Data is read from the buffer in the same sequence it was written.
+
+To determine how much data can be read from or written to the buffer:
+
+```c++
+    page_size_t can_read = buffer->available();
+    page_size_t maximum = buffer->capacity();
+    page_size_t can_store = buffer->free();
+```
+
+Note that the buffer is just a large block of bytes. It is up to the caller to be sure that the way the data is
+retrieved is compatible with how it was stored.
+
+Normally, the buffer is all or nothing - if the requested number of bytes cannot be read or written, then no bytes
+are read or written. There are 'soft' variants of the read/write methods that allow less than the specified number of
+bytes to be read/written.
+
+
+Coding tips
+===========
+
+# The [main API](firmware/flashee-eeprom.h) to the library is provided by the `Devices` class, which is a factory for obtaining various flash-access
+devices, and the `FlashDevice` abstract base class, which defines the operations of a flash device.
+
+# The spark external eeprom has 384 pages, each 4096 bytes in size. This is the device made accessible via the `Devices::userFlash()` method.
+Rather than hard-code these constants, you can make the code more flexible for future changes by using `Devices::userFlash().pageSize()` and
+ `Devices::userFlash().pageCount()`.
+
+# when writing data to a device, try to write in as few blocks as possible (particularly if the data is overwriting previously eritten data).
+ This will reduce the number of erases performed by the library, particularly for the wear levelling scheme.
+
+# At present, the maximum contiguous area that the Wear Levelling or Address Erase scheme can occupy is 1MB (256 pages).
+This is to keep runtime memory overhead to a minimum. This restriction may later be relaxed.
+
+# You can have many different devices created at once, so long as they are in separate regions. For example
+
+```c++
+    FlashDevice* eeprom = Devices::createAddressErase(0, 256*4096);
+    CircularBuffer* logBuffer = Devices::createCircularBuffer(256*4096, 256*4096);
+```
+
+This creates an byte erasable eeprom device in the first 1MB, and a circular buffer in the final 0.5MB.
+
 
 Testing
 =======
@@ -68,10 +168,10 @@ The tests run against mock or fake implementations of a flash device.
 
 To run the unit tests:
 
-# clone this repo to your desktop machine
-# (if running Windows, be sure to install MinGW installed also.)
-# cd to flashee-eeprom/firmware/test
-# run `make test`
+    1. clone this repo to your desktop machine
+    2. (if running Windows, be sure to install MinGW installed also.)
+    3. cd to flashee-eeprom/firmware/test
+    4. run `make test`
 
 After the tests are built, they are automatically run. You should then see output similar to this:
 
@@ -94,8 +194,8 @@ After the tests are built, they are automatically run. You should then see outpu
     [----------] 2 tests from FakeFlashDeviceTest (1 ms total)
 
     [----------] Global test environment tear-down
-    [==========] 66 tests from 8 test cases ran. (1714 ms total)
-    [  PASSED  ] 66 tests.
+    [==========] 102 tests from 8 test cases ran. (1714 ms total)
+    [  PASSED  ] 102 tests.
 
 
 Integration Tests
@@ -106,9 +206,10 @@ The aim of the integration test is to test that the library functions as a whole
 The integration test is available from the online IDE, under `examples/integration-test.cpp`.
 
 To run the integration test:
-# build and flash integration-test-cpp to the core
-# use a serial monitor to connect to the core locally via the USB serial interface
-# press 't' to start the tests.
+
+    1. build and flash integration-test-cpp to the core
+    2. use a serial monitor to connect to the core locally via the USB serial interface
+    3. press 't' to start the tests.
 
 If all goes well, you should see output in the serial monitor after a few seconds. The whole suite takes about a minute
 to run and produces output similar to this:
@@ -128,7 +229,6 @@ to run and produces output similar to this:
     Test SparkFlashCanWriteOddBytes passed.
     Test SuccessiveWrittenValuesAreAnded passed.
     Test WriteDistinctValueToPages passed.
-    Test ok passed.
     Test summary: 15 passed, 0 failed, and 0 skipped, out of 15 test(s).
 
 
@@ -140,7 +240,6 @@ faster development cycle and easier debugging. For testing, the flash
 memory was faked using a `FakeFlashDevice` class that emulated a flash
 device in memory (ANDed writes, page erases and read/write only on
 even address/even length.)
-
 
 
 Emulation Layers
@@ -257,8 +356,4 @@ well as any of the higher level layers. Typically, the PageSpanFlashDevice
 is placed on the top-level device that the client uses, so the client is free
 to read arbitrary blocks. The FlashDeviceRegion is used to divide up the
 physical flash memory into distinct areas.
-
-
-
-
 

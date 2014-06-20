@@ -15,11 +15,11 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>CircularBufferTest.cpp</itemPath>
+      <itemPath>DevicesTest.cpp</itemPath>
       <itemPath>FakeFlashDeviceTest.cpp</itemPath>
       <itemPath>FlashDeviceRegionTest.cpp</itemPath>
       <itemPath>FlashDeviceTest.cpp</itemPath>
       <itemPath>FlashDeviceTest.h</itemPath>
-      <itemPath>FlasheeTest.cpp</itemPath>
       <itemPath>LogicalPageMapperTest.cpp</itemPath>
       <itemPath>MultiWriteFlashStoreTest.cpp</itemPath>
       <itemPath>PageSpanFlashDeviceTest.cpp</itemPath>
@@ -64,6 +64,8 @@
       </item>
       <item path="CircularBufferTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
+      <item path="DevicesTest.cpp" ex="false" tool="1" flavor2="0">
+      </item>
       <item path="FakeFlashDeviceTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="FlashDeviceRegionTest.cpp" ex="false" tool="1" flavor2="0">
@@ -71,8 +73,6 @@
       <item path="FlashDeviceTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="FlashDeviceTest.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="FlasheeTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Generators.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -115,6 +115,8 @@
       </item>
       <item path="CircularBufferTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
+      <item path="DevicesTest.cpp" ex="false" tool="1" flavor2="0">
+      </item>
       <item path="FakeFlashDeviceTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="FlashDeviceRegionTest.cpp" ex="false" tool="1" flavor2="0">
@@ -122,8 +124,6 @@
       <item path="FlashDeviceTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="FlashDeviceTest.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="FlasheeTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Generators.h" ex="false" tool="3" flavor2="0">
       </item>

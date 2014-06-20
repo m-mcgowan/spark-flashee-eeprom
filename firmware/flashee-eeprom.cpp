@@ -15,15 +15,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef SPARK 
-#include "application.h"
-#else
-#include <stdint.h>
-#endif
+
 #include "flashee-eeprom.h"
 
-namespace Flashee {
-
+namespace Flashee {    
+    
 FlashDevice::~FlashDevice() { }
 
 #ifdef SPARK
@@ -32,7 +28,7 @@ FlashDevice::~FlashDevice() { }
     static FakeFlashDevice directFlash(384, 4096);
 #endif
 
-FlashDeviceRegion flashee::userRegion(directFlash, 0x80000, 0x200000);
+FlashDeviceRegion Devices::userRegion(directFlash, 0x80000, 0x200000);
 
 
 /**

@@ -32,7 +32,7 @@ class CircularBufferTest : public ::testing::Test {
             page_size_t written = 0;
             page_size_t w;
             do {
-                w = this->sut.write(buf, min(page_size_t(50), max-written));
+                w = this->sut.write_soft(buf, min(page_size_t(50), max-written));
                 written += w;
             }
             while (w!=0);    
@@ -48,7 +48,7 @@ class CircularBufferTest : public ::testing::Test {
                 toWrite = min(page_size_t(sizeof(buf)), max-written);
                 for (int i=0; i<toWrite; i++)
                     buf[i] = gen.next();                
-                w = this->sut.write(buf, toWrite);
+                w = this->sut.write_soft(buf, toWrite);
                 for (int i=toWrite; i-->w; ) {
                     gen.push_back(buf[i]);
                 }
@@ -64,7 +64,7 @@ class CircularBufferTest : public ::testing::Test {
             page_size_t r;
             
             do {                
-                r = this->sut.read(buf, min(page_size_t(50), max-read));
+                r = this->sut.read_soft(buf, min(page_size_t(50), max-read));
                 read += r;
             }
             while (r!=0);    
@@ -84,7 +84,7 @@ class CircularBufferTest : public ::testing::Test {
             page_size_t r;
             
             do {                
-                r = this->sut.read(buf, min(page_size_t(50), max-read));
+                r = this->sut.read_soft(buf, min(page_size_t(50), max-read));
                 assertBufferEqual(buf, r, gen);
                 read += r;
             }
@@ -120,17 +120,17 @@ TEST_F(CircularBufferTest, CanDrainBuffer) {
 TEST_F(CircularBufferTest, WriteFailsUntilPageIsRead) {
     this->fillBuffer();    
     char buf[50];   
-    EXPECT_EQ(0, this->sut.write(buf,10)) << "should not be able to write while buffer is full";
+    EXPECT_EQ(0, this->sut.write_soft(buf,10)) << "should not be able to write while buffer is full";
     
     // read the data - but not past the first page
-    EXPECT_EQ(10, this->sut.read(buf, 10)) << "Should be able to read 10 bytes";
-    EXPECT_EQ(0, this->sut.write(buf,10)) << "should not be able to write while buffer has no free pages";
+    EXPECT_EQ(10, this->sut.read_soft(buf, 10)) << "Should be able to read 10 bytes";
+    EXPECT_EQ(0, this->sut.write_soft(buf,10)) << "should not be able to write while buffer has no free pages";
     
-    EXPECT_EQ(25, this->sut.read(buf, 25)) << "Should be able to read 25 bytes";
-    EXPECT_EQ(20, this->sut.write(buf,40)) << "should be able to write 1 page";
-    EXPECT_EQ(0, this->sut.write(buf,10)) << "should not be able to write while buffer has no free pages";
-    EXPECT_EQ(5, this->sut.read(buf, 5)) << "Should be able to read 5 bytes";
-    EXPECT_EQ(20, this->sut.write(buf,50)) << "should be able to write 1 page (2)";    
+    EXPECT_EQ(25, this->sut.read_soft(buf, 25)) << "Should be able to read 25 bytes";
+    EXPECT_EQ(20, this->sut.write_soft(buf,40)) << "should be able to write 1 page";
+    EXPECT_EQ(0, this->sut.write_soft(buf,10)) << "should not be able to write while buffer has no free pages";
+    EXPECT_EQ(5, this->sut.read_soft(buf, 5)) << "Should be able to read 5 bytes";
+    EXPECT_EQ(20, this->sut.write_soft(buf,50)) << "should be able to write 1 page (2)";    
 }
 
 /**
@@ -148,16 +148,17 @@ TEST_F(CircularBufferTest, WriteFailsUntilPageIsReadWrappedAround) {
     // now we have the read pointer at offset 150 and the write pointer at offset 100
     EXPECT_EQ(40, this->fillBuffer()) << "can only write up to page before read pointer";
     
-    EXPECT_EQ(0, this->sut.write(buf,10)) << "should not be able to write while buffer is full";
+    EXPECT_EQ(0, this->sut.write_soft(buf,10)) << "should not be able to write while buffer is full";
     EXPECT_EQ(190, this->sut.available());
+    EXPECT_EQ(0, this->sut.free()) << "no space to write since this would erase the read page";
     
     // read the data - but not past the first page
-    EXPECT_EQ(10, this->sut.read(buf, 10)) << "Should be able to read 10 bytes";
-    EXPECT_EQ(20, this->sut.write(buf,40)) << "should be able to write one more page after read";
+    EXPECT_EQ(10, this->sut.read_soft(buf, 10)) << "Should be able to read 10 bytes";
+    EXPECT_EQ(20, this->sut.write_soft(buf,40)) << "should be able to write one more page after read";
     
-    EXPECT_EQ(30, this->sut.read(buf, 30)) << "Should be able to read 30 bytes";
-    EXPECT_EQ(20, this->sut.write(buf,40)) << "should not be able to write while buffer has no free pages";
-    EXPECT_EQ(0, this->sut.write(buf,10)) << "should not be able to write while buffer is full ";    
+    EXPECT_EQ(30, this->sut.read_soft(buf, 30)) << "Should be able to read 30 bytes";
+    EXPECT_EQ(20, this->sut.write_soft(buf,40)) << "should not be able to write while buffer has no free pages";
+    EXPECT_EQ(0, this->sut.write_soft(buf,10)) << "should not be able to write while buffer is full ";    
 }
 
 TEST_F(CircularBufferTest, VerifyDataContentTheSame) {
