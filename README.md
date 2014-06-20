@@ -20,6 +20,7 @@ Key features:
 - 3 different types of eeprom emulations providing speed/erase cycle tradeoff.
 - Wear levelling and page allocation on demand for increased endurance
 - Circular buffers for logs, temporary data etc.
+- Stream access to the storage for convenient read and write of multiple values.
 
 Getting Started
 ===============
@@ -128,6 +129,30 @@ retrieved is compatible with how it was stored.
 Normally, the buffer is all or nothing - if the requested number of bytes cannot be read or written, then no bytes
 are read or written. There are 'soft' variants of the read/write methods that allow less than the specified number of
 bytes to be read/written.
+
+Note that although the circular buffer storage is in flash, the data is essentially non-persistent. On reset, a new
+buffer is created which ignores the data in flash.
+
+
+Streaming
+=========
+The streaming classes provide a higher-level access to the storage. For example:
+
+```c++
+    FlashDevice* device = Devices::createWearLevelErase();
+    FlashWriter writer(device);
+    writer.writeString("Hello World");
+    writer.writeInt(42);
+```
+
+And this data can then be read back later:
+
+    FlashDevice* device = Devices::createWearLevelErase();
+    FlashReader reader(device);
+    char buf[50];
+    reader.readeString(buf);
+    int answer = reader.readInt();
+
 
 
 Coding tips

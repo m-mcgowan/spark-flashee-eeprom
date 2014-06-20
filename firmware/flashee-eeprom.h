@@ -290,6 +290,93 @@ public:
     
 };
 
+class FlashStream {
+    
+protected:
+    FlashDevice& flash;
+    flash_addr_t address;
+    
+public:
+
+    FlashStream(FlashDevice& device, flash_addr_t start=0) : flash(device), address(start) { }
+    
+    void advance(page_count_t amount) { address += amount; }
+};
+
+class FlashReader : FlashStream {
+    
+public:
+    FlashReader(FlashDevice& device, flash_addr_t start=0)
+            : FlashStream(device, start) {}
+            
+    FlashReader(FlashDevice* device, flash_addr_t start=0)
+            : FlashStream(*device, start) {}
+
+            
+    void read(void* buf, page_size_t length) {
+        flash.read(buf, address, length);
+        advance(length);
+    }
+    
+    uint8_t read() {
+        uint8_t result;
+        read(&result, 1);
+        return result;
+    }
+    
+    uint16_t readWord() {
+        uint16_t result;
+        read(&result, sizeof(result));
+        return result;
+    }
+    
+    uint32_t readInt() {
+        uint32_t result;
+        read(&result, sizeof(result));
+        return result;
+    }
+    
+    void readString(char* buf) {
+        uint16_t actual = readWord();
+        read(buf, actual);
+    }
+};
+
+
+class FlashWriter : FlashStream {
+    
+public:
+    FlashWriter(FlashDevice& device, flash_addr_t start=0)
+            : FlashStream(device, start) {}
+            
+    FlashWriter(FlashDevice* device, flash_addr_t start=0)
+            : FlashStream(*device, start) {}
+    
+    void write(const void* buf, page_size_t length) {
+        flash.write(buf, address, length);
+        advance(length);
+    }
+    
+    void writeString(const char* s) {
+        uint16_t len = strlen(s);
+        write(&len, sizeof(len));
+        write(s, len);
+    }
+    
+    void write(uint8_t value) {
+        write(&value, 1);
+    }
+    
+    void writeWord(uint16_t value) {
+        write(&value, 2);
+    }
+    
+    void writeInt(uint32_t value) {
+        write(&value, sizeof(value));
+    }
+    
+};
+
 
 
 class Devices {
