@@ -39,16 +39,17 @@ To create the flash object:
 ```
 
 This reserves all pages in the external flash for a flash device that provides byte-level erases. This offers
-the best erase cycle count at the cost of an 8x overhead.
+the best erase cycle count at the cost of an 8x overhead. This scheme gives a maximum of 128Kb of storage.
 
-Another eeprom emulation scheme is basic wear levelling:
+If you need more than 128Kb of rewritable storage, the next step down the endurance ladder is the wear levelling scheme:
 
 ```c++
     FlashDevice* flash = Devices::createWearLevelErase();
 ```
 
-This uses wear levelling to spread the erases out over the flash region. Each write to the flash - or specifically
-each write that changes a 0 to a 1, will cause a page erase.
+This uses wear levelling to spread the erases out over the flash region. Endurance an order of magnitude less than the address erase scheme
+ above, but is potentially 1-2 orders of magnitude better than manually erasing and writing directly to flash.
+  This scheme has much less overhead, and can offer upto 1MB of flash.
 
 To store data:
 
@@ -66,8 +67,7 @@ To retrieve data:
 ```
 
 So far, this is just like the regular sFLASH access functions that are available in the spark core API.
-Where this library is different is that you can freely
-overwrite the data, just by issuing another write command:
+Where this library is different is that you can freely overwrite the data, just by issuing another write command:
 
 ```c++
     flash->writeString("I think I changed my mind!", 0);
@@ -257,6 +257,86 @@ to run and produces output similar to this:
     Test SuccessiveWrittenValuesAreAnded passed.
     Test WriteDistinctValueToPages passed.
     Test summary: 15 passed, 0 failed, and 0 skipped, out of 15 test(s).
+
+Performance Profiling
+=====================
+The example code [`performance-profile.cpp`](firmware/examples/performance-profile.cpp) profiles the direct flash
+access and 2 types of eeprom emulation. The results are below:
+
+```
+Running tests
+Performance test: Address level erase
+Buffer size: 128
+ Erase: took 36 Kbytes/sec
+ Write: took 11 Kbytes/sec
+ Rewrite: took 11 Kbytes/sec
+
+Buffer size: 512
+ Erase: took 36 Kbytes/sec
+ Write: took 11 Kbytes/sec
+ Rewrite: took 11 Kbytes/sec
+
+Buffer size: 2048
+ Erase: took 36 Kbytes/sec
+ Write: took 11 Kbytes/sec
+ Rewrite: took 11 Kbytes/sec
+
+
+Performance test: Wear level page erase
+Buffer size: 128
+ Erase: took 147 Kbytes/sec
+ Write: took 123 Kbytes/sec
+ Rewrite: took 2 Kbytes/sec
+
+Buffer size: 512
+ Erase: took 147 Kbytes/sec
+ Write: took 125 Kbytes/sec
+ Rewrite: took 7 Kbytes/sec
+
+Buffer size: 2048
+ Erase: took 151 Kbytes/sec
+ Write: took 126 Kbytes/sec
+ Rewrite: took 19 Kbytes/sec
+
+
+Performance test: Basic flash access
+Buffer size: 128
+ Erase: took 289 Kbytes/sec
+ Write: took 124 Kbytes/sec
+ Rewrite: N/A
+Buffer size: 512
+ Erase: took 290 Kbytes/sec
+ Write: took 126 Kbytes/sec
+ Rewrite: N/A
+Buffer size: 2048
+ Erase: took 289 Kbytes/sec
+ Write: took 126 Kbytes/sec
+ Rewrite: N/A
+
+Test complete.
+```
+
+The Single Wear Page scheme was not tested since this would incur a high number of erases to a single page.
+
+Conclusions from the data above:
+
+ * address level erase has the faster rewrite performace, at 11Kb/s, vs 7Kb/s for the wear levelling scheme. (The address
+ level erase also has an order of magnitude better endurance since it erases pages less often.)
+
+ * writing direct to flash is about 7x faster (including erase time), but doesn't support rewrites.
+    (That's the main contribution of this library.)
+
+ * compared to an Arduino, all schemes are significantly faster.
+    The arduino eeprom requires 3.3ms to erase a single byte - equivalent to 0.3 Kb/s throughput.
+
+ * with the wear levelling scheme, writing larger buffers improves throughput since the number of page erases and copies required is reduced.
+
+Internally, the eeprom emulation uses a 128 byte buffer. This explains why the address erase scheme shoes no performance
+improvement when called with larger buffers. Increasing the size of the internal buffer may improve performance - see
+`STACK_BUFFER_SIZE` in the headers.
+
+Finally, it's wise not to pick a scheme based on performance, unless performance is the defining characteristic of
+your application, in which case it is best to write direct to flash and manage page erases by hand.
 
 
 Implementation Details

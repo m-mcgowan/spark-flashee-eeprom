@@ -18,7 +18,7 @@
 #ifndef _FLASHEE_EEPROM_H_
 #define _FLASHEE_EEPROM_H_
 
-#ifdef SPARK 
+#ifdef SPARK
 #include "application.h"
 #endif
 
@@ -108,7 +108,7 @@ public:
         }
         return success;
     }
-    
+
     /**
      * Writes directly to the flash. Depending upon the state of the flash, the
      * write may provide the data required or it may not.
@@ -155,11 +155,11 @@ public:
 /**
  * A circular buffer over flash memory. When the writer attempts to overwrite
  * the page that the reader is on, writing fails by returning 0.
- * 
- * Regular reads and writes are all or nothing - they will read or write the 
+ *
+ * Regular reads and writes are all or nothing - they will read or write the
  * required amount to the buffer or fail if that is not possible.
  * There are also soft variants of the read/write methods that allow up to the
- * specified number of bytes to be read/written. 
+ * specified number of bytes to be read/written.
  */
 class CircularBuffer {
     FlashDevice& flash;
@@ -184,10 +184,10 @@ private:
             else
                 length = space;
         }
-                
+
         page_size_t blockSize = flash.pageSize();
         page_size_t result = length;
-        while (length > 0) {            
+        while (length > 0) {
             page_size_t offset = write_pointer % blockSize;
             page_size_t blockWrite = min(length, blockSize-offset);
             if (!offset)
@@ -202,7 +202,7 @@ private:
         size_ += result;
         return result;
     }
-    
+
     /**
      * Reads up to {@code length} bytes from the buffer. If data is available
      * then at least one byte will be returned (unless length is 0.)
@@ -212,17 +212,17 @@ private:
      * is data available, and <= length specified. If this returns 0, there is no
      * data available in the buffer.
      */
-    page_size_t read_impl(void* buf, page_size_t length, bool hard) const {        
+    page_size_t read_impl(void* buf, page_size_t length, bool hard) const {
         if (length>size_) {
             if (hard)
                 return 0;
             else
                 length = size_;
         }
-                
+
         page_size_t result = length;
         page_size_t blockSize = flash.pageSize();
-        while (length > 0) {            
+        while (length > 0) {
             // write each page
             page_size_t offset = read_pointer % blockSize;
             page_size_t blockRead = min(length, blockSize-offset);
@@ -236,7 +236,7 @@ private:
         size_ -= result;
         return result;
     }
-    
+
 public:
 
     CircularBuffer(FlashDevice& storage)
@@ -248,29 +248,29 @@ public:
     page_size_t write(const void* buf, page_size_t length) {
         return write_impl(buf, length, true);
     }
-    
+
     page_size_t write_soft(const void* buf, page_size_t length) {
-        return write_impl(buf, length, false);        
+        return write_impl(buf, length, false);
     }
-    
+
     /**
-     * Reads the given number of bytes from the buffer, if available.     
+     * Reads the given number of bytes from the buffer, if available.
      * @return {@code length} if there was sufficient data in the buffer, or
      * 0 if it could not be read.
-     */    
-    page_size_t read(void* buf, page_size_t length) const {        
+     */
+    page_size_t read(void* buf, page_size_t length) const {
         return read_impl(buf, length, true);
     }
 
     /**
-     * Reads up to a given number of characters. 
-     * @return The number of bytes read, up to {@code length}. 
+     * Reads up to a given number of characters.
+     * @return The number of bytes read, up to {@code length}.
      */
-    page_size_t read_soft(void* buf, page_size_t length) const {        
+    page_size_t read_soft(void* buf, page_size_t length) const {
         return read_impl(buf, length, false);
     }
-    
-    
+
+
     /**
      * Retrieves the maximum number of bytes that can be read from the buffer.
      * @return The maximum number of bytes that can be read from the buffer.
@@ -278,17 +278,17 @@ public:
     page_size_t available() const {
         return size_;
     }
-    
+
     /**
      * Retrieves the maximum storage capacity of this buffer.
      * @param buf
      * @param length
-     * @return 
+     * @return
      */
     page_size_t capacity() const {
         return this->capacity_;
     }
-    
+
     /**
      * Retrieves the number of bytes that can be written to the buffer.
      * @return The free space in the buffer. Note that this may not change
@@ -296,58 +296,58 @@ public:
      */
     page_size_t free() const {
         // cannot write into the same page that is being read so this space is unavailable
-        page_size_t free = capacity_ - size_ - (read_pointer % flash.pageSize()); 
+        page_size_t free = capacity_ - size_ - (read_pointer % flash.pageSize());
         return free;
     }
-    
+
 };
 
 class FlashStream {
-    
+
 protected:
     FlashDevice& flash;
     flash_addr_t address;
-    
+
 public:
 
     FlashStream(FlashDevice& device, flash_addr_t start=0) : flash(device), address(start) { }
-    
+
     void advance(page_count_t amount) { address += amount; }
 };
 
 class FlashReader : FlashStream {
-    
+
 public:
     FlashReader(FlashDevice& device, flash_addr_t start=0)
             : FlashStream(device, start) {}
-            
+
     FlashReader(FlashDevice* device, flash_addr_t start=0)
             : FlashStream(*device, start) {}
 
-            
+
     void read(void* buf, page_size_t length) {
         flash.read(buf, address, length);
         advance(length);
     }
-    
+
     uint8_t read() {
         uint8_t result;
         read(&result, 1);
         return result;
     }
-    
+
     uint16_t readWord() {
         uint16_t result;
         read(&result, sizeof(result));
         return result;
     }
-    
+
     uint32_t readInt() {
         uint32_t result;
         read(&result, sizeof(result));
         return result;
     }
-    
+
     void readString(char* buf) {
         uint16_t actual = readWord();
         read(buf, actual);
@@ -356,37 +356,37 @@ public:
 
 
 class FlashWriter : FlashStream {
-    
+
 public:
     FlashWriter(FlashDevice& device, flash_addr_t start=0)
             : FlashStream(device, start) {}
-            
+
     FlashWriter(FlashDevice* device, flash_addr_t start=0)
             : FlashStream(*device, start) {}
-    
+
     void write(const void* buf, page_size_t length) {
         flash.write(buf, address, length);
         advance(length);
     }
-    
+
     void writeString(const char* s) {
         uint16_t len = strlen(s);
         write(&len, sizeof(len));
         write(s, len);
     }
-    
+
     void write(uint8_t value) {
         write(&value, 1);
     }
-    
+
     void writeWord(uint16_t value) {
         write(&value, 2);
     }
-    
+
     void writeInt(uint32_t value) {
         write(&value, sizeof(value));
     }
-    
+
 };
 
 
@@ -394,12 +394,6 @@ public:
 class Devices {
 private:
     static FlashDeviceRegion userRegion;
-
-    inline static FlashDevice* createUserFlashRegion(flash_addr_t startAddress, flash_addr_t endAddress, page_count_t minPageCount=1) {
-        if (((endAddress-startAddress)/userRegion.pageSize())<minPageCount)
-            return NULL;
-        return userRegion.createSubregion(startAddress, endAddress);
-    }
 
     inline static FlashDevice* createLogicalPageMapper(FlashDevice* flash, page_count_t pageCount) {
         page_count_t count = flash->pageCount();
@@ -433,6 +427,13 @@ public:
     static FlashDevice& userFlash() {
         return userRegion;
     }
+
+    static FlashDevice* createUserFlashRegion(flash_addr_t startAddress, flash_addr_t endAddress, page_count_t minPageCount=1) {
+        if (((endAddress-startAddress)/userRegion.pageSize())<minPageCount)
+            return NULL;
+        return userRegion.createSubregion(startAddress, endAddress);
+    }
+
 
     /**
      * Creates a flash device where each destructive write causes the page to
@@ -483,7 +484,7 @@ public:
     /**
      * Creates a circular buffer that uses the pages
      */
-    static CircularBuffer* createCircularBuffer(flash_addr_t startAddress, flash_addr_t endAddress) {              
+    static CircularBuffer* createCircularBuffer(flash_addr_t startAddress, flash_addr_t endAddress) {
         FlashDevice* device = createUserFlashRegion(startAddress, endAddress, 2);
         return device ? new CircularBuffer(*device) : NULL;
     }
