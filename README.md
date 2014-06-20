@@ -269,8 +269,8 @@ provide the same API (so they can be used interchangably), with each
 implementation providing a different trade-off between storage efficiency
 and the maximum erase wear for any given page.
 
-Direct flash
-^^^^^^^^^^^^
+### Direct flash
+
 This is simply direct access to the flash memory. Automatic erase before
 write is not supported. On construction, the range of pages in flash to be
 used is specified. This doesn't provide EEPROM semantics, but rather
@@ -301,8 +301,8 @@ This implementation is recommended for cases when the data changes
 less than 10^5 times during the lifetime of the system (the maximum wear
 for a page in external flash being 10^5.)
 
-Wear Levelled storage
-^^^^^^^^^^^^^^^^^^^^^
+### Wear Levelled storage
+
 This uses a specified region of flash where logical pages are mapped to
 their actual page location in flash. This allows the actual location of a logical
 address to be changed, such as when erasing a page. When a logical page is
@@ -338,8 +338,8 @@ order of magnitude. When combined with the wear levelled storage,
 destructive writes in the order of 10^8 can be achieved over the lifetime
 of the device.
 
-Combining Layers
-^^^^^^^^^^^^^^^^
+### Combining Layers
+
 All the implementations of the eeprom emulation expose the same interface, and the higher level
 storage schemes (Wear Levelled storage/Redundant storage) also
 expect an implementation of that interface as their base storage. This
