@@ -249,20 +249,20 @@ even address/even length.)
 
 Emulation Layers
 ----------------
-
 The library provides a random read/write access device, similar to
 EEPROM from the external flash on the spark. It's implemented as one or more layers on
 top of the flash API. These layers take care of page erases and provide multiple
 writes to the same logical address. It does this through two key techniques:
 
- - redundant storage - multiple writes to the same logical address are
+ * redundant storage - multiple writes to the same logical address are
 implemented as writes to distinct physical addresses in flash.
 
- - wear levelling: a mapping from logical pages to physical pages is
+ * wear levelling: a mapping from logical pages to physical pages is
 maintained. When a logical page is erased, it is assigned to a new free
 physical page (using an even random distribution). This ensures updates
 to a single page are spread out over the area of flash allocated, so the
 wear is spread out across many pages rather than just one.
+
 
 For EEPROM-like storage, there are several implementations that
 provide the same API (so they can be used interchangably), with each
@@ -270,7 +270,7 @@ implementation providing a different trade-off between storage efficiency
 and the maximum erase wear for any given page.
 
 Direct flash
-````````````
+^^^^^^^^^^^^
 This is simply direct access to the flash memory. Automatic erase before
 write is not supported. On construction, the range of pages in flash to be
 used is specified. This doesn't provide EEPROM semantics, but rather
@@ -286,25 +286,23 @@ necessary. This is typically when a destructive write is performed - writing
 a 1 bit to a location where there was previously a 0.
 
 Direct with erase copy
-``````````````````````
-This scheme stores the data directly in flash at the location you
-specify. When a page erase is needed to reset 0 bits back to 1, the page
-is copied - either to a memory buffer (if there is sufficient free memory
-available) or to a reserved page in flash. The original page is then erased
+^^^^^^^^^^^^^^^^^^^^^^
+This scheme stores the data directly in flash at the address
+specified. When a page erase is needed to reset 0 bits back to 1, the page
+is copied to a reserved page in flash. The original page is then erased
 and the data copied back.
 
 This makes the most efficient use of space in terms of storage used, but
-at the cost of considerable wear on pages that are updated frequently,
-and even more wear on the reserved page if there is not enough memory
-to allocate a 4K buffer, since  every write that requries an erase will erase
+at the cost of considerable wear on the reserved page, which is erased for every
+single erasure on any page, since every write that requires an erase will erase
 the reserved page.
 
 This implementation is recommended for cases when the data changes
 less than 10^5 times during the lifetime of the system (the maximum wear
-for a page in external flash.)
+for a page in external flash being 10^5.)
 
 Wear Levelled storage
-`````````````````````
+^^^^^^^^^^^^^^^^^^^^^
 This uses a specified region of flash where logical pages are mapped to
 their actual page location in flash. This allows the actual location of a logical
 address to be changed, such as when erasing a page. When a logical page is
@@ -326,7 +324,7 @@ the arduino allows 10^5 erases, this is already surpassing eeprom wear
 levels.
 
 Redundant Storage
-`````````````````
+^^^^^^^^^^^^^^^^^
 This scheme allows multiple destructive writes to the same logical
 address without requiring an erase in the underlying flash. It achieves this by
 representing each logical byte as a 8-byte slot. Data is written until the slot
@@ -341,7 +339,7 @@ destructive writes in the order of 10^8 can be achieved over the lifetime
 of the device.
 
 Combining Layers
-````````````````
+^^^^^^^^^^^^^^^^
 All the implementations of the eeprom emulation expose the same interface, and the higher level
 storage schemes (Wear Levelled storage/Redundant storage) also
 expect an implementation of that interface as their base storage. This
