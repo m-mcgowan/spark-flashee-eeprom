@@ -99,6 +99,16 @@ public:
 
     virtual bool erasePage(flash_addr_t address) = 0;
 
+    bool eraseAll() {
+        flash_addr_t end = length();
+        flash_addr_t size = pageSize();
+        bool success = true;
+        for (flash_addr_t i = 0; i<end; i+=size) {
+            success = success && erasePage(i);
+        }
+        return success;
+    }
+    
     /**
      * Writes directly to the flash. Depending upon the state of the flash, the
      * write may provide the data required or it may not.
@@ -168,11 +178,12 @@ private:
      */
     page_size_t write_impl(const void* buf, page_size_t length, bool hard) {
         page_size_t space = free();
-        if (length>space)
+        if (length>space) {
             if (hard)
                 return 0;
             else
                 length = space;
+        }
                 
         page_size_t blockSize = flash.pageSize();
         page_size_t result = length;
@@ -202,11 +213,12 @@ private:
      * data available in the buffer.
      */
     page_size_t read_impl(void* buf, page_size_t length, bool hard) const {        
-        if (length>size_)
+        if (length>size_) {
             if (hard)
                 return 0;
             else
                 length = size_;
+        }
                 
         page_size_t result = length;
         page_size_t blockSize = flash.pageSize();
