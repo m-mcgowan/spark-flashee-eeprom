@@ -110,8 +110,9 @@ Reading from the buffer:
 ```c++
     MyStruct data = ...;
     bool success = buffer->read(&data, sizeof(data));
-
+```
 Data is read from the buffer in the same sequence it was written.
+
 
 To determine how much data can be read from or written to the buffer:
 
@@ -132,27 +133,28 @@ bytes to be read/written.
 Coding tips
 ===========
 
-# The [main API](firmware/flashee-eeprom.h) to the library is provided by the `Devices` class, which is a factory for obtaining various flash-access
+* The [main API](firmware/flashee-eeprom.h) to the library is provided by the `Devices` class, which is a factory for obtaining various flash-access
 devices, and the `FlashDevice` abstract base class, which defines the operations of a flash device.
 
-# The spark external eeprom has 384 pages, each 4096 bytes in size. This is the device made accessible via the `Devices::userFlash()` method.
-Rather than hard-code these constants, you can make the code more flexible for future changes by using `Devices::userFlash().pageSize()` and
+* The spark external eeprom has 384 pages, each 4096 bytes in size and is managed as the device provided via the `Devices::userFlash()` method.
+Rather than hard-code these page count and page size constants, you can make the code more flexible for future changes by using `Devices::userFlash().pageSize()` and
  `Devices::userFlash().pageCount()`.
 
-# when writing data to a device, try to write in as few blocks as possible (particularly if the data is overwriting previously eritten data).
- This will reduce the number of erases performed by the library, particularly for the wear levelling scheme.
+* when writing data to a device, try to write in as few blocks as possible (particularly if the data is overwriting previously eritten data).
+ This will reduce the number of erases performed by the library, particularly for the wear levelling scheme. When using
+ the Address Erase strategy, then byte by byte writes are fine.
 
-# At present, the maximum contiguous area that the Wear Levelling or Address Erase scheme can occupy is 1MB (256 pages).
+* At present, the maximum contiguous area that the Wear Levelling or Address Erase scheme can occupy is 1MB (256 pages).
 This is to keep runtime memory overhead to a minimum. This restriction may later be relaxed.
 
-# You can have many different devices created at once, so long as they are in separate regions. For example
+* It's possible to create several different devices and have them all active at once, so long as they are in separate regions. For example
 
 ```c++
     FlashDevice* eeprom = Devices::createAddressErase(0, 256*4096);
     CircularBuffer* logBuffer = Devices::createCircularBuffer(256*4096, 256*4096);
 ```
 
-This creates an byte erasable eeprom device in the first 1MB, and a circular buffer in the final 0.5MB.
+This creates a byte erasable eeprom device in the first 1MB, and a circular buffer in the final 0.5MB.
 
 
 Testing
@@ -232,8 +234,11 @@ to run and produces output similar to this:
     Test summary: 15 passed, 0 failed, and 0 skipped, out of 15 test(s).
 
 
+Implementation Details
+======================
+
 Development
-===========
+-----------
 I developed the library initially as a standalone library compiled on regular
 g++ on my desktop. Compared to embedded development, this allowed a
 faster development cycle and easier debugging. For testing, the flash
@@ -243,7 +248,7 @@ even address/even length.)
 
 
 Emulation Layers
-================
+----------------
 
 The library provides a random read/write access device, similar to
 EEPROM from the external flash on the spark. It's implemented as one or more layers on
@@ -265,7 +270,7 @@ implementation providing a different trade-off between storage efficiency
 and the maximum erase wear for any given page.
 
 Direct flash
-------------
+````````````
 This is simply direct access to the flash memory. Automatic erase before
 write is not supported. On construction, the range of pages in flash to be
 used is specified. This doesn't provide EEPROM semantics, but rather
@@ -281,7 +286,7 @@ necessary. This is typically when a destructive write is performed - writing
 a 1 bit to a location where there was previously a 0.
 
 Direct with erase copy
-----------------------
+``````````````````````
 This scheme stores the data directly in flash at the location you
 specify. When a page erase is needed to reset 0 bits back to 1, the page
 is copied - either to a memory buffer (if there is sufficient free memory
@@ -299,7 +304,7 @@ less than 10^5 times during the lifetime of the system (the maximum wear
 for a page in external flash.)
 
 Wear Levelled storage
----------------------
+`````````````````````
 This uses a specified region of flash where logical pages are mapped to
 their actual page location in flash. This allows the actual location of a logical
 address to be changed, such as when erasing a page. When a logical page is
@@ -321,7 +326,7 @@ the arduino allows 10^5 erases, this is already surpassing eeprom wear
 levels.
 
 Redundant Storage
------------------
+`````````````````
 This scheme allows multiple destructive writes to the same logical
 address without requiring an erase in the underlying flash. It achieves this by
 representing each logical byte as a 8-byte slot. Data is written until the slot
@@ -336,7 +341,7 @@ destructive writes in the order of 10^8 can be achieved over the lifetime
 of the device.
 
 Combining Layers
-----------------
+````````````````
 All the implementations of the eeprom emulation expose the same interface, and the higher level
 storage schemes (Wear Levelled storage/Redundant storage) also
 expect an implementation of that interface as their base storage. This
