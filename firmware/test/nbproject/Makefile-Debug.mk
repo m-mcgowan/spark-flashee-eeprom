@@ -35,9 +35,11 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/_ext/1472/ff.o \
 	${OBJECTDIR}/_ext/1472/flashee-eeprom.o \
 	${OBJECTDIR}/CircularBufferTest.o \
 	${OBJECTDIR}/DevicesTest.o \
+	${OBJECTDIR}/FSTest.o \
 	${OBJECTDIR}/FakeFlashDeviceTest.o \
 	${OBJECTDIR}/FlashDeviceRegionTest.o \
 	${OBJECTDIR}/FlashDeviceTest.o \
@@ -73,65 +75,75 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/test.exe: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/test ${OBJECTFILES} ${LDLIBSOPTIONS}
 
+${OBJECTDIR}/_ext/1472/ff.o: ../ff.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1472
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -I.. -I. -I../../../core-firmware/inc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1472/ff.o ../ff.cpp
+
 ${OBJECTDIR}/_ext/1472/flashee-eeprom.o: ../flashee-eeprom.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1472
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1472/flashee-eeprom.o ../flashee-eeprom.cpp
+	$(COMPILE.cc) -g -I.. -I. -I../../../core-firmware/inc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1472/flashee-eeprom.o ../flashee-eeprom.cpp
 
 ${OBJECTDIR}/CircularBufferTest.o: CircularBufferTest.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CircularBufferTest.o CircularBufferTest.cpp
+	$(COMPILE.cc) -g -I.. -I. -I../../../core-firmware/inc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CircularBufferTest.o CircularBufferTest.cpp
 
 ${OBJECTDIR}/DevicesTest.o: DevicesTest.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DevicesTest.o DevicesTest.cpp
+	$(COMPILE.cc) -g -I.. -I. -I../../../core-firmware/inc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DevicesTest.o DevicesTest.cpp
+
+${OBJECTDIR}/FSTest.o: FSTest.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -I.. -I. -I../../../core-firmware/inc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/FSTest.o FSTest.cpp
 
 ${OBJECTDIR}/FakeFlashDeviceTest.o: FakeFlashDeviceTest.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/FakeFlashDeviceTest.o FakeFlashDeviceTest.cpp
+	$(COMPILE.cc) -g -I.. -I. -I../../../core-firmware/inc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/FakeFlashDeviceTest.o FakeFlashDeviceTest.cpp
 
 ${OBJECTDIR}/FlashDeviceRegionTest.o: FlashDeviceRegionTest.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/FlashDeviceRegionTest.o FlashDeviceRegionTest.cpp
+	$(COMPILE.cc) -g -I.. -I. -I../../../core-firmware/inc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/FlashDeviceRegionTest.o FlashDeviceRegionTest.cpp
 
 ${OBJECTDIR}/FlashDeviceTest.o: FlashDeviceTest.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/FlashDeviceTest.o FlashDeviceTest.cpp
+	$(COMPILE.cc) -g -I.. -I. -I../../../core-firmware/inc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/FlashDeviceTest.o FlashDeviceTest.cpp
 
 ${OBJECTDIR}/LogicalPageMapperTest.o: LogicalPageMapperTest.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/LogicalPageMapperTest.o LogicalPageMapperTest.cpp
+	$(COMPILE.cc) -g -I.. -I. -I../../../core-firmware/inc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/LogicalPageMapperTest.o LogicalPageMapperTest.cpp
 
 ${OBJECTDIR}/MultiWriteFlashStoreTest.o: MultiWriteFlashStoreTest.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/MultiWriteFlashStoreTest.o MultiWriteFlashStoreTest.cpp
+	$(COMPILE.cc) -g -I.. -I. -I../../../core-firmware/inc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/MultiWriteFlashStoreTest.o MultiWriteFlashStoreTest.cpp
 
 ${OBJECTDIR}/PageSpanFlashDeviceTest.o: PageSpanFlashDeviceTest.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/PageSpanFlashDeviceTest.o PageSpanFlashDeviceTest.cpp
+	$(COMPILE.cc) -g -I.. -I. -I../../../core-firmware/inc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/PageSpanFlashDeviceTest.o PageSpanFlashDeviceTest.cpp
 
 ${OBJECTDIR}/SinglePageWearTest.o: SinglePageWearTest.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SinglePageWearTest.o SinglePageWearTest.cpp
+	$(COMPILE.cc) -g -I.. -I. -I../../../core-firmware/inc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SinglePageWearTest.o SinglePageWearTest.cpp
 
 ${OBJECTDIR}/gmock-gtest-all.o: gmock-gtest-all.cc 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/gmock-gtest-all.o gmock-gtest-all.cc
+	$(COMPILE.cc) -g -I.. -I. -I../../../core-firmware/inc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/gmock-gtest-all.o gmock-gtest-all.cc
 
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I.. -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
+	$(COMPILE.cc) -g -I.. -I. -I../../../core-firmware/inc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
 
 # Subprojects
 .build-subprojects:

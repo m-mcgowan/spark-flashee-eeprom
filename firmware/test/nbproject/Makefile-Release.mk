@@ -35,9 +35,11 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/_ext/1472/ff.o \
 	${OBJECTDIR}/_ext/1472/flashee-eeprom.o \
 	${OBJECTDIR}/CircularBufferTest.o \
 	${OBJECTDIR}/DevicesTest.o \
+	${OBJECTDIR}/FSTest.o \
 	${OBJECTDIR}/FakeFlashDeviceTest.o \
 	${OBJECTDIR}/FlashDeviceRegionTest.o \
 	${OBJECTDIR}/FlashDeviceTest.o \
@@ -73,6 +75,11 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/test.exe: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/test ${OBJECTFILES} ${LDLIBSOPTIONS}
 
+${OBJECTDIR}/_ext/1472/ff.o: ../ff.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1472
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1472/ff.o ../ff.cpp
+
 ${OBJECTDIR}/_ext/1472/flashee-eeprom.o: ../flashee-eeprom.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1472
 	${RM} "$@.d"
@@ -87,6 +94,11 @@ ${OBJECTDIR}/DevicesTest.o: DevicesTest.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DevicesTest.o DevicesTest.cpp
+
+${OBJECTDIR}/FSTest.o: FSTest.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/FSTest.o FSTest.cpp
 
 ${OBJECTDIR}/FakeFlashDeviceTest.o: FakeFlashDeviceTest.cpp 
 	${MKDIR} -p ${OBJECTDIR}

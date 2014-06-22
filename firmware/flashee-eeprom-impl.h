@@ -124,7 +124,7 @@ public:
     virtual bool writeErasePage(const void* _data, flash_addr_t address, page_size_t length) {
         bool success = false;
         const uint8_t* data = as_bytes(_data);
-        if (!(address & 1) && !(length & 1) && isValidRegion(address, length)) {
+        if (isValidRegion(address, length)) {
             for (; length-- > 0;) {
                 this->data_[address++] = *data++;
             }
@@ -516,6 +516,8 @@ public:
  * This exists so that we can easily test the internal parts of the page mapper,
  * without having to resort to friend classes or including gtest in production
  * code.
+ * 
+ * @param page_index_t  The size needed to store the range of physical pages.
  */
 template <class page_index_t = uint8_t>
 class LogicalPageMapperImpl {
@@ -538,7 +540,7 @@ public:
     /**
      * The number of logical pages that will be allocated out of the physical storage.
      */
-    const page_count_t logicalPageCount;
+    const page_index_t logicalPageCount;
 
     /**
      * Each bit N%8 at index N/8 is set if physical page N is in use.
@@ -566,12 +568,12 @@ public:
      * @return
      */
     bool formatIfNeeded() {
-        page_count_t max = maxPage();
+        page_index_t max = maxPage();
         header_t header = readHeader(max);
         bool erased = false;
         if (header != FORMAT_HEADER_SIGNATURE) {
             erased = true;
-            for (page_count_t i = max; i-- > 0;) {
+            for (page_index_t i = max+1; i-- > 0;) {
                 erasePageIfNecessary(i);
             }
             writeHeader(max, FORMAT_HEADER_SIGNATURE);
@@ -585,7 +587,7 @@ public:
      * @param page The page index to check if the page has any 0 bits.
      * @return {@code true} if this page requires erasing to reset.
      */
-    bool pageIsDirty(page_count_t page) const {
+    bool pageIsDirty(page_index_t page) const {
         flash_addr_t addr = flash.pageAddress(page);
         flash_addr_t end = addr + flash.pageSize();
         uint8_t buf[STACK_BUFFER_SIZE];
@@ -605,7 +607,7 @@ public:
      * Ensures a page is in pristine state and flags this page as not in use.
      * @param page The page index to erase.
      */
-    void erasePageIfNecessary(page_count_t page) {
+    void erasePageIfNecessary(page_index_t page) {
         if (pageIsDirty(page)) {
             flash.erasePage(flash.pageAddress(page));
         }
@@ -616,21 +618,21 @@ public:
      * Fetches the maximum (exclusive) physical page that can be used for
      * backing logical pages. The housekeeping region starts here.
      */
-    page_count_t maxPage() const {
+    page_index_t maxPage() const {
         return flash.pageCount() - 1;
     }
 
-    void assignLogicalPage(page_index_t logicalPage, page_index_t physicalPage) {
+    void assignLogicalPage(page_index_t logicalPage, page_index_t physicalPage) const {
         logicalPageMap[logicalPage] = physicalPage;
     }
 
     void buildInUseMap() {
-        page_count_t unallocated = maxPage();
-        for (page_count_t i = 0; i < logicalPageCount; i++) {
+        page_index_t unallocated = maxPage();
+        for (page_index_t i = 0; i < logicalPageCount; i++) {
             logicalPageMap[i] = page_index_t(unallocated);
         }
 
-        for (page_count_t i = maxPage(); i-- > 0;) {
+        for (page_index_t i = maxPage(); i-- > 0;) {
             uint16_t header = readHeader(i);
             bool inUse = isHeaderInUse(header);
             setPageInUse(i, inUse);
@@ -661,13 +663,13 @@ public:
      * @param page
      * @return The physical page allocated.
      */
-    page_count_t allocateLogicalPage(page_index_t page) const {
-        page_count_t free = nextFreePage(randomPage() % maxPage());
+    page_index_t allocateLogicalPage(page_index_t page) const {
+        page_index_t free = nextFreePage(randomPage() % maxPage());
         setPageInUse(free, true);
         if (readHeader(free) != 0xFFFF) // if the header is clean the rest will be.
             flash.erasePage(flash.pageAddress(free));
-        logicalPageMap[page] = free;
-        writeHeader(free, page | 0x7F); // bit 15 clear means in use.
+        assignLogicalPage(page, free);        
+        writeHeader(free, uint16_t(page) | 0x7F00); // bit 15 clear means in use.
         return free;
     }
 
@@ -676,15 +678,15 @@ public:
      * @param offset
      * @return
      */
-    page_count_t nextFreePage(page_count_t offset) const {
-        page_count_t max = maxPage();
-        for (page_count_t i = 0; i < max; i++) {
-            page_count_t page = (i + offset) % max;
+    page_index_t nextFreePage(page_index_t offset) const {
+        page_index_t max = maxPage();
+        for (page_index_t i = 0; i < max; i++) {
+            page_index_t page = page_index_t((page_count_t(i) + offset) % max);
             if (!isPageInUse(page)) {
                 return page;
             }
         }
-        return page_count_t(-1);
+        return max;
     }
 
     /**
@@ -703,55 +705,55 @@ public:
         return inUseFlags == 1;
     }
 
-    uint16_t readHeader(page_count_t page) const {
+    uint16_t readHeader(page_index_t page) const {
         uint16_t header = 0;
         flash.readPage(&header, flash.pageAddress(page), headerSize);
         return header;
     }
 
-    void writeHeader(page_count_t page, uint16_t header) const {
+    void writeHeader(page_index_t page, uint16_t header) const {
         flash.writePage(&header, flash.pageAddress(page), headerSize);
     }
 
-    inline uint8_t& inUseFlags(page_count_t page) const {
+    inline uint8_t& inUseFlags(page_index_t page) const {
         return inUse[page >> 3];
     }
 
-    inline uint8_t pageFlagMask(page_count_t page) const {
+    inline uint8_t pageFlagMask(page_index_t page) const {
         return 1 << (page & 7);
     }
 
-    void setPageInUse(page_count_t page, bool inUse) const {
+    void setPageInUse(page_index_t page, bool inUse) const {
         if (inUse)
             inUseFlags(page) |= pageFlagMask(page);
         else
             inUseFlags(page) &= ~pageFlagMask(page);
     }
 
-    bool isPageInUse(page_count_t page) const {
+    bool isPageInUse(page_index_t page) const {
         return inUseFlags(page) & pageFlagMask(page);
     }
 
-    page_count_t fetchAllocatePage(page_index_t page) const {
-        page_count_t flashPage = logicalPageMap[page];
+    page_index_t fetchAllocatePage(page_index_t page) const {
+        page_index_t flashPage = logicalPageMap[page];
         if (flashPage == maxPage()) {
             flashPage = allocateLogicalPage(page);
         }
         return flashPage;
     }
 
-    inline page_count_t physicalPageFor(page_count_t logicalPage) const {
+    inline page_index_t physicalPageFor(page_index_t logicalPage) const {
         return logicalPageMap[logicalPage];
     }
 
-    inline page_count_t pageFromAddress(flash_addr_t address, page_size_t pageSize) const {
-        return address / pageSize;
+    inline page_index_t pageFromAddress(flash_addr_t address, page_size_t pageSize) const {
+        return page_index_t(address / pageSize);
     }
 
     flash_addr_t physicalAddress(flash_addr_t address, page_size_t size) const {
         page_index_t page = address / size;
         page_size_t offset = address % size;
-        page_count_t flashPage = fetchAllocatePage(page);
+        page_index_t flashPage = fetchAllocatePage(page);
         flash_addr_t flashAddr = flash.pageAddress(flashPage) + offset + headerSize;
         return flashAddr;
     }
@@ -776,8 +778,8 @@ public:
         page_index_t page = pageFromAddress(address, pageSize());
         bool success = false;
         if (page >= 0 && page < logicalPageCount) {
-            page_count_t physicalPage = physicalPageFor(page);
-            page_count_t max = maxPage();
+            page_index_t physicalPage = physicalPageFor(page);
+            page_index_t max = maxPage();
             success = physicalPage == max;
             if (!success) {
                 logicalPageMap[page] = max; // mark as no allocation
@@ -812,9 +814,9 @@ public:
      * @return
      */
     bool copyPage(flash_addr_t address, TransferHandler handler, void* data, uint8_t* buf, page_size_t bufSize) {
-        page_count_t logicalPage = address / pageSize();
-        page_count_t oldPage = this->physicalPageFor(logicalPage);
-        page_count_t newPage = this->allocateLogicalPage(logicalPage);
+        page_index_t logicalPage = address / pageSize();
+        page_index_t oldPage = this->physicalPageFor(logicalPage);
+        page_index_t newPage = this->allocateLogicalPage(logicalPage);
         page_size_t offset = 0;
         page_size_t size = pageSize();
         flash_addr_t oldBase = flash.pageAddress(oldPage) + headerSize;

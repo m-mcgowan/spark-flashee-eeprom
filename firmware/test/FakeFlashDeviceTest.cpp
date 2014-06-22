@@ -29,3 +29,15 @@ TEST(FakeFlashDeviceTest, CorrectSize2) {
     FakeFlashDevice mock(6, 2+20*8);
     ASSERT_EQ((20ul*8+2)*6, mock.length());
 }
+
+TEST(FakeFlashDeviceTest, EraseAll) {
+    FakeFlashDevice fake(40, 50);
+    fake.eraseAll();
+    uint8_t buf[50];
+    for (int i=0; i<fake.pageCount(); i++) {
+        ASSERT_TRUE(fake.readPage(buf, fake.pageAddress(i), sizeof(buf)));
+        for (int x=0; x<sizeof(buf); x++) {
+            ASSERT_EQ(255, buf[x]) << "page offset " << x << " in page " << i;
+        }
+    }
+}

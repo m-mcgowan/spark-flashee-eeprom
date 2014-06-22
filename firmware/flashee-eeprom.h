@@ -25,9 +25,10 @@
 #include <stdint.h>
 #include "string.h"
 #include "stdlib.h"
+#include "FlashIO.h"
 
 namespace Flashee {
-
+      
 typedef uint32_t flash_addr_t;
 typedef uint32_t page_size_t;
 typedef uint32_t page_count_t;
@@ -67,8 +68,8 @@ public:
         return readPage(data, address, length);
     }
 
-    inline bool writeString(const char* s, flash_addr_t address) {
-        return write(s, address, strlen(s));
+    inline bool writeString(const char* s, flash_addr_t address, bool includeNull=true) {
+        return write(s, address, strlen(s)+(includeNull?1:0));
     }
 
     /**
@@ -391,6 +392,7 @@ public:
 
 
 
+
 class Devices {
 private:
     static FlashDeviceRegion userRegion;
@@ -488,6 +490,22 @@ public:
         FlashDevice* device = createUserFlashRegion(startAddress, endAddress, 2);
         return device ? new CircularBuffer(*device) : NULL;
     }
+        
+    /** 
+     * Allocates a region of flash for storing a FAT filesystem. If an existing filesystem
+     * has alredy been created elsewhere, that volume is closed. (Only one volume can be
+     * accessed at a time.)
+     * 
+     * @param startAddress  The starting address for the allocated region.
+     * @param endAddress    The ending address (exclusive) for the allocated region.
+     * @param pfs           The address of the FATFS structure for this filesystem. 
+     *  This is typically statically allocated.
+     * @param format        When true, the storage will be formatted.
+     */
+    static FRESULT createFATRegion(flash_addr_t startAddress, flash_addr_t endAddress, 
+        FATFS* pfs, FormatCmd formatCmd=FORMAT_IF_NEEDED);
+        
+    
 };
 
 } // namespace

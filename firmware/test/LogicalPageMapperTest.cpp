@@ -59,3 +59,47 @@ TEST(LogicalPageMapperTest, LogicalPageMapInitialized) {
         ASSERT_LE(mapper.logicalPageMap[i], 39) << "logical page " << i << " maps to physical page " << mapper.logicalPageMap[i];
     }
 }
+
+TEST(LogicalPageMapperTest, WriteHeader) {
+    FakeFlashDevice fake(40, 50);
+    LogicalPageMapperImpl<> mapper(fake, 20);    
+    mapper.formatIfNeeded();    
+    mapper.writeHeader(5, 0x1234);
+    
+    uint16_t value;
+    ASSERT_TRUE(fake.read(&value, fake.pageAddress(5), sizeof(value)));
+    ASSERT_EQ(0x1234, value);
+}
+
+TEST(LogicalPageMapperTest, FormatWritesHeaderID) {
+    FakeFlashDevice fake(40, 50);           // random content
+    LogicalPageMapper<> mapper(fake, 20);   // ensure the last page is erased
+
+    uint16_t value;
+    ASSERT_TRUE(fake.read(&value, fake.pageAddress(39), sizeof(value)));
+    ASSERT_EQ(0x2FFFu, value);    
+}
+
+TEST(LogicalPageMapperTest, LogicalMappingIsPersisted) {    
+    FakeFlashDevice fake(40, 50);
+    LogicalPageMapper<> mapper(fake, 20);
+
+    const char* msg = "Hello";
+    ASSERT_TRUE(mapper.writeString(msg, 75));
+    
+    char buf[10];       // sanity test - read that it was written.
+    ASSERT_TRUE(mapper.readPage(buf, 75, sizeof(buf)));
+    ASSERT_STREQ(buf, msg) << "string not correctly written";
+    
+    // now allocate a new mapper in the same storage
+    LogicalPageMapper<> mapper2(fake, 20);
+    
+    memset(buf, 0, sizeof(buf));
+    ASSERT_TRUE(mapper.readPage(buf, 75, sizeof(buf)));
+    ASSERT_STREQ(buf, msg) << "expected data to be unchanged in original mapper.";
+
+    memset(buf, 0, sizeof(buf));
+    ASSERT_TRUE(mapper2.readPage(buf, 75, sizeof(buf)));
+    ASSERT_STREQ(buf, msg) << "expected data to be persisted for use by second mapper";
+
+}

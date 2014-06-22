@@ -16,6 +16,7 @@
                    projectFiles="true">
       <itemPath>CircularBufferTest.cpp</itemPath>
       <itemPath>DevicesTest.cpp</itemPath>
+      <itemPath>FSTest.cpp</itemPath>
       <itemPath>FakeFlashDeviceTest.cpp</itemPath>
       <itemPath>FlashDeviceRegionTest.cpp</itemPath>
       <itemPath>FlashDeviceTest.cpp</itemPath>
@@ -24,6 +25,7 @@
       <itemPath>MultiWriteFlashStoreTest.cpp</itemPath>
       <itemPath>PageSpanFlashDeviceTest.cpp</itemPath>
       <itemPath>SinglePageWearTest.cpp</itemPath>
+      <itemPath>../ff.cpp</itemPath>
       <itemPath>../flashee-eeprom.cpp</itemPath>
       <itemPath>gmock-gtest-all.cc</itemPath>
       <itemPath>main.cpp</itemPath>
@@ -56,15 +58,20 @@
           <incDir>
             <pElem>..</pElem>
             <pElem>.</pElem>
+            <pElem>../../../core-firmware/inc</pElem>
           </incDir>
           <commandLine>-static-libgcc -static-libstdc++ -std=gnu++11</commandLine>
         </ccTool>
       </compileType>
+      <item path="../ff.cpp" ex="false" tool="1" flavor2="0">
+      </item>
       <item path="../flashee-eeprom.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="CircularBufferTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="DevicesTest.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="FSTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="FakeFlashDeviceTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -111,11 +118,15 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
+      <item path="../ff.cpp" ex="false" tool="1" flavor2="0">
+      </item>
       <item path="../flashee-eeprom.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="CircularBufferTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="DevicesTest.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="FSTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="FakeFlashDeviceTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
