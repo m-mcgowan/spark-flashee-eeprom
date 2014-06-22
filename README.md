@@ -1,5 +1,5 @@
-spark-flashee-eeprom
-====================
+flashee
+=======
 
 Eeprom emulation using external flash on the [Spark Core](http://spark.io).
 Includes unit tests cross compiled to regular gcc, and on-device integration tests.
@@ -21,6 +21,7 @@ Key features:
 - Wear levelling and page allocation on demand for increased endurance
 - Circular buffers for logs, temporary data etc.
 - Stream access to the storage for convenient read and write of multiple values.
+- File System support: a FAT filesystem can be stored in a region of flash.
 
 Getting Started
 ===============
@@ -147,12 +148,34 @@ The streaming classes provide a higher-level access to the storage. For example:
 
 And this data can then be read back later:
 
+```c++
     FlashDevice* device = Devices::createWearLevelErase();
     FlashReader reader(device);
     char buf[50];
     reader.readeString(buf);
     int answer = reader.readInt();
+```
 
+File System
+===========
+Flashee includes support for storing a FAT filesystem in an area of flash. The FAT support is provided by
+[fatfs](http://elm-chan.org/fsw/ff/00index_e.html) library.
+
+To set side a region of flash for file storage, use the `createFATRegion()` function:
+
+```c++
+   FATFS fs;
+   FRESULT result = Devices::createFATRegion(0, 4096*384, &fs);
+   if (result==FR_OK) {
+        // FS ok - use fatfs functions to read/write to the filesystem
+   }
+```
+
+This allocates area of flash for a FAT filesystem. The default behaviour is to format the region,, if it is not recognized
+as a valid FAT filesystem. This can be controlled via the 4th parameter to the function.
+
+Since it's based on Flashee's eraseable storage, the filesystem is fully rewritable. See the FileXXX.cpp examples
+for more details on using fatfs with flashee.
 
 
 Coding tips
@@ -169,14 +192,16 @@ Rather than hard-code these page count and page size constants, you can make the
  This will reduce the number of erases performed by the library, particularly for the wear levelling scheme. When using
  the Address Erase strategy, then byte by byte writes are fine.
 
-* At present, the maximum contiguous area that the Wear Levelling or Address Erase scheme can occupy is 1MB (256 pages).
-This is to keep runtime memory overhead to a minimum. This restriction may later be relaxed.
+* At present, the maximum contiguous area that the Wear Levelling schemes (Wear Levellign and Address Erase)
+  can occupy is 1MB (256 pages). This is to keep runtime memory overhead to a minimum. This restriction may later be relaxed. For now,
+  A workaround for accessing more than 1MB is to create two separate blocks of memory. This 1MB limitation is not present
+ for circular buffers, or for the Single Page Wear scheme.
 
 * It's possible to create several different devices and have them all active at once, so long as they are in separate regions. For example
 
 ```c++
     FlashDevice* eeprom = Devices::createAddressErase(0, 256*4096);
-    CircularBuffer* logBuffer = Devices::createCircularBuffer(256*4096, 256*4096);
+    CircularBuffer* logBuffer = Devices::createCircularBuffer(256*4096, 384*4096);
 ```
 
 This creates a byte erasable eeprom device in the first 1MB, and a circular buffer in the final 0.5MB.
