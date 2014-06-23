@@ -221,8 +221,18 @@ DRESULT disk_ioctl (
 extern "C" {
 
 DWORD get_fattime() {
-#ifdef SPARK_CORE
+#ifdef SPARK
+    uint32_t now = Time.now();
+    int year = Time.year(now);
+    int month = Time.month(now);
+    int day = Time.day(now);
+    int hour = Time.hour(now);
+    int min = Time.minute(now);
+    int sec = Time.second(now);
     
+    DWORD time = 
+        ((year-1980)<<25) | (month<<21) | (day<<16) | (hour << 11) | (min << 5) | (sec/2);
+    return time;
 #else
     return 0;
 #endif    
