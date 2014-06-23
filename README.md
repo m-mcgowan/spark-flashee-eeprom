@@ -33,7 +33,19 @@ To use the library in application code, include the header file and import the n
     using namespace Flashee;
 ```
 
-To create the flash object:
+To gain access to the services of `flashee`, you use the `Devices` class, which provides methods for creating the
+various access types to flash available.  You typically call a `Devices` method in setup() and store the result in a
+global pointer. Like this:
+
+```c++
+    FlashDevice* flash;
+
+    void setup() {
+        flash = Devices::createMeSomethingFlashy();
+    }
+```
+
+For general access to flash as eeprom, use this call:
 
 ```c++
     FlashDevice* flash = Devices::createAddressErase();
