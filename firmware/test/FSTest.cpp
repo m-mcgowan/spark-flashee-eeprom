@@ -136,12 +136,6 @@ TEST_F(FSTest, CreatedFileIsPersisted) {
     assertFileExists("abc.txt", "foo bar");    
 }
 
-/**
- * At once point, this was failing, while creating 2 files succeeded.
- * @param 
- * @param 
- * @return 
- */
 TEST_F(FSTest, CreatedSingleFileIsPersisted) {
     assertCreateFile("abcd.txt", "hello world!");    
     createFS();

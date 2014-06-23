@@ -171,13 +171,13 @@ class FSVolume {
    
 public:    
 #if _FS_MINIMIZE == 0
-    HRESULT stat(const TCHAR* path, FILINFO* info) {
+    FRESULT stat(const TCHAR* path, FILINFO* info) {
         return f_stat(path, info);
     }    
 #endif
 
 #if _FS_READONLY == 0    
-    HRESULT mkdir(const TCHAR* path) {
+    FRESULT mkdir(const TCHAR* path) {
         return f_mkdir(path);
     }    
 #endif

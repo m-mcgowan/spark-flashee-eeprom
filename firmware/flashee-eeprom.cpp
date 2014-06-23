@@ -16,7 +16,6 @@
  */
 
 #include "flashee-eeprom.h"
-#include "FlashIO.h"
 #include "diskio.h"
 #include "FlashIO.h"
 #include "ff.h"
