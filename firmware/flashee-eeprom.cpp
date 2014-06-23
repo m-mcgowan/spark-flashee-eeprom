@@ -98,7 +98,7 @@ FRESULT f_setFlashDevice(FlashDevice* device, FATFS* pfs, FormatCmd cmd) {
     
     FRESULT result = f_mount(pfs, "", 0);
     if (result==FR_OK) {   
-        bool formatRequired = cmd==Flashee::FORMAT || (cmd==Flashee::FORMAT_IF_NEEDED && !is_formatted());
+        bool formatRequired = cmd==Flashee::FORMAT_CMD_FORMAT || (cmd==Flashee::FORMAT_CMD_FORMAT_IF_NEEDED && !is_formatted());
         if (formatRequired) {
             result = low_level_format();
         }    

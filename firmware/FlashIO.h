@@ -219,12 +219,12 @@ namespace Flashee {
     class FlashDevice;
     
     enum FormatCmd {
-        NONE,
-        FORMAT,
-        FORMAT_IF_NEEDED        
+        FORMAT_CMD_NONE,
+        FORMAT_CMD_FORMAT,
+        FORMAT_CMD_FORMAT_IF_NEEDED        
     };
 
-    FRESULT f_setFlashDevice(FlashDevice* device, FATFS* pfs, FormatCmd cmd=FORMAT_IF_NEEDED);    
+    FRESULT f_setFlashDevice(FlashDevice* device, FATFS* pfs, FormatCmd cmd=FORMAT_CMD_FORMAT_IF_NEEDED);    
 }
 
 

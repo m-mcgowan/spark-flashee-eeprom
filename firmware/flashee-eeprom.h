@@ -503,7 +503,7 @@ public:
      * @param format        When true, the storage will be formatted.
      */
     static FRESULT createFATRegion(flash_addr_t startAddress, flash_addr_t endAddress, 
-        FATFS* pfs, FormatCmd formatCmd=FORMAT_IF_NEEDED);
+        FATFS* pfs, FormatCmd formatCmd=FORMAT_CMD_FORMAT_IF_NEEDED);
         
     
 };

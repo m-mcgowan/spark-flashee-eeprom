@@ -29,7 +29,7 @@ class FatTest : public ::testing::Test {
 TEST(CreateFSTest, DeviceNotFormattedReturnsErrorCode) {
     ASSERT_TRUE(Devices::userFlash().eraseAll());
     FATFS fs;
-    FRESULT result = Devices::createFATRegion(0*4096, 128*4096, &fs, NONE);
+    FRESULT result = Devices::createFATRegion(0*4096, 128*4096, &fs, FORMAT_CMD_NONE);
     ASSERT_EQ(FR_NO_FILESYSTEM, result) << "Expected no filesystem on uninitialized flash";
 }
 
@@ -73,7 +73,7 @@ TEST(CreateFSTest, DeviceClearedWhenFormatRequested) {
     ASSERT_EQ(FR_OK, f_stat(filename, NULL)) << "expected file to exist after create";
     
     FATFS fs2;
-    ASSERT_EQ(FR_OK, Devices::createFATRegion(0*4096, 128*4096, &fs2, FORMAT));
+    ASSERT_EQ(FR_OK, Devices::createFATRegion(0*4096, 128*4096, &fs2, FORMAT_CMD_FORMAT));
     ASSERT_EQ(FR_NO_FILE, f_stat(filename, NULL)) << "expected file to not exist after recreating and formatting the flash region";    
 }
 
