@@ -33,9 +33,9 @@ Setting up your environment
 want to use the library with. This will automatically add the include directive to bring in the header file.
 
 - If you're compiling locally using the makefile, copy files from the `firmware` folder in the repo.
--- copy all the *.h files to a new folder `core-firmware\inc\flashee-eeprom`,
--- copy all the *.cpp files to `core-firmware\src`
--- `core-firmware\src\build.mk` and add these additional lines:
+ - copy all the *.h files to a new folder `core-firmware\inc\flashee-eeprom`,
+ - copy all the *.cpp files to `core-firmware\src`
+ - `core-firmware\src\build.mk` and add these additional lines:
     ```
     CPPSRC += $(TARGET_SRC_PATH)/ff.cpp
     CPPSRC += $(TARGET_SRC_PATH)/flashee-eeprom.cpp
