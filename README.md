@@ -26,17 +26,23 @@ Key features:
 Getting Started
 ===============
 
-Setting up your environment:
+Setting up your environment
+---------------------------
 
 - If you're using the online IDE, click on "libraries", then "flashee-eeprom", then "Include in app", and finally select the app you
-want to use the library with.
+want to use the library with. This will automatically add the include directive to bring in the header file.
 
-- If you're compiling locally using the makefile, copy all the *.h files to a new folder `core-firmware\inc\flashee-eeprom`, copy all the *.cpp
-files to `core-firmware\src` and edit `core-firmware\src\build.mk` and add these additional lines:
-```
-CPPSRC += $(TARGET_SRC_PATH)/ff.cpp
-CPPSRC += $(TARGET_SRC_PATH)/flashee-eeprom.cpp
-```
+- If you're compiling locally using the makefile, copy files from the `firmware` folder in the repo.
+-- copy all the *.h files to a new folder `core-firmware\inc\flashee-eeprom`,
+-- copy all the *.cpp files to `core-firmware\src`
+-- `core-firmware\src\build.mk` and add these additional lines:
+    ```
+    CPPSRC += $(TARGET_SRC_PATH)/ff.cpp
+    CPPSRC += $(TARGET_SRC_PATH)/flashee-eeprom.cpp
+    ```
+
+Using the library
+-----------------
 
 To use the library in application code, include the header file and import the namespace, like this:
 
