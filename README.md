@@ -214,7 +214,7 @@ Coding tips
 * The [main API](firmware/flashee-eeprom.h) to the library is provided by the `Devices` class, which is a factory for obtaining various flash-access
 devices, and the `FlashDevice` abstract base class, which defines the operations of a flash device.
 
-* The spark external eeprom has 384 pages, each 4096 bytes in size and is managed as the device provided via the `Devices::userFlash()` method.
+* The spark external flash has 384 pages, each 4096 bytes in size and is managed as the device provided via the `Devices::userFlash()` method.
 Rather than hard-code these page count and page size constants, you can make the code more flexible for future changes by using `Devices::userFlash().pageSize()` and
  `Devices::userFlash().pageCount()`.
 
@@ -222,10 +222,10 @@ Rather than hard-code these page count and page size constants, you can make the
  This will reduce the number of erases performed by the library, particularly for the wear leveling scheme. When using
  the Address Erase strategy, then byte by byte writes are fine.
 
-* At present, the maximum contiguous area that the Wear Leveling schemes (Wear Levellign and Address Erase)
-  can occupy is 1MB (256 pages). This is to keep runtime memory overhead to a minimum. This restriction may later be relaxed. For now,
-  A workaround for accessing more than 1MB is to create two separate blocks of memory. This 1MB limitation is not present
- for circular buffers, or for the Single Page Wear scheme.
+* At present, the maximum contiguous area that the Wear Leveling and Address Erase
+  schemes can occupy is 1MB (256 pages). This is to keep runtime memory overhead to a minimum. This restriction may later be relaxed. For now,
+  A workaround for accessing more than 1MB is to create more than one device, specifying non-overlapping regions for each device.
+  This 1MB limitation is not present for circular buffers, nor for the Single Page Wear scheme.
 
 * It's possible to create several different devices and have them all active at once, so long as they are in separate regions. For example
 
