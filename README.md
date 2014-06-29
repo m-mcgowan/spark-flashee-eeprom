@@ -18,7 +18,7 @@ Key features:
 - Provides persistent storage using the external 1.5MB user flash on the spark
 - EEPROM-like access - (byte erasable) no need to worry about erasing pages to ensure data integrity.
 - 3 different types of eeprom emulations providing speed/erase cycle tradeoff.
-- Wear levelling and page allocation on demand for increased endurance
+- Wear leveling and page allocation on demand for increased endurance
 - Circular buffers for logs, temporary data etc.
 - Stream access to the storage for convenient read and write of multiple values.
 - File System support: a FAT filesystem can be stored in a region of flash.
@@ -26,7 +26,19 @@ Key features:
 Getting Started
 ===============
 
-To use the library in application code, include the header file and import the namespace:
+Setting up your environment:
+
+- If you're using the online IDE, click on "libraries", then "flashee-eeprom", then "Include in app", and finally select the app you
+want to use the library with.
+
+- If you're compiling locally using the makefile, copy all the *.h files to a new folder `core-firmware\inc\flashee-eeprom`, copy all the *.cpp
+files to `core-firmware\src` and edit `core-firmware\src\build.mk` and add these additional lines:
+```
+CPPSRC += $(TARGET_SRC_PATH)/ff.cpp
+CPPSRC += $(TARGET_SRC_PATH)/flashee-eeprom.cpp
+```
+
+To use the library in application code, include the header file and import the namespace, like this:
 
 ```c++
     #include "flashee-eeprom/flashee-eeprom.h"
@@ -34,7 +46,7 @@ To use the library in application code, include the header file and import the n
 ```
 
 To gain access to the services of `flashee`, you use the `Devices` class, which provides methods for creating the
-various access types to flash available.  You typically call a `Devices` method in setup() and store the result in a
+various flash devices available.  You typically call a `Devices` method in setup() and store the result in a
 global pointer. Like this:
 
 ```c++
@@ -54,13 +66,13 @@ For general access to flash as eeprom, use this call:
 This reserves all pages in the external flash for a flash device that provides byte-level erases. This offers
 the best erase cycle count at the cost of an 8x overhead. This scheme gives a maximum of 128Kb of storage.
 
-If you need more than 128Kb of rewritable storage, the next step down the endurance ladder is the wear levelling scheme:
+If you need more than 128Kb of rewritable storage, the next step down the endurance ladder is the wear leveling scheme:
 
 ```c++
     FlashDevice* flash = Devices::createWearLevelErase();
 ```
 
-This uses wear levelling to spread the erases out over the flash region. Endurance an order of magnitude less than the address erase scheme
+This uses wear leveling to spread the erases out over the flash region. Endurance an order of magnitude less than the address erase scheme
  above, but is potentially 1-2 orders of magnitude better than manually erasing and writing directly to flash.
   This scheme has much less overhead, and can offer upto 1MB of flash.
 
@@ -201,10 +213,10 @@ Rather than hard-code these page count and page size constants, you can make the
  `Devices::userFlash().pageCount()`.
 
 * when writing data to a device, try to write in as few blocks as possible (particularly if the data is overwriting previously eritten data).
- This will reduce the number of erases performed by the library, particularly for the wear levelling scheme. When using
+ This will reduce the number of erases performed by the library, particularly for the wear leveling scheme. When using
  the Address Erase strategy, then byte by byte writes are fine.
 
-* At present, the maximum contiguous area that the Wear Levelling schemes (Wear Levellign and Address Erase)
+* At present, the maximum contiguous area that the Wear Leveling schemes (Wear Levellign and Address Erase)
   can occupy is 1MB (256 pages). This is to keep runtime memory overhead to a minimum. This restriction may later be relaxed. For now,
   A workaround for accessing more than 1MB is to create two separate blocks of memory. This 1MB limitation is not present
  for circular buffers, or for the Single Page Wear scheme.
@@ -303,61 +315,97 @@ access and 2 types of eeprom emulation. The results are below:
 ```
 Running tests
 Performance test: Address level erase
-Buffer size: 128
- Erase: took 36 Kbytes/sec
- Write: took 11 Kbytes/sec
- Rewrite: took 11 Kbytes/sec
+Buffer size: 128, total bytes: 16352
+ Erase: throughput 1090 Kbytes/sec
+ Verify erase: throughput 50 Kbytes/sec
+ Write: throughput 11 Kbytes/sec
+ Verify write: throughput 49 Kbytes/sec
+ Rewrite: throughput 11 Kbytes/sec
+ Verify rewrite: throughput 49 Kbytes/sec
 
-Buffer size: 512
- Erase: took 36 Kbytes/sec
- Write: took 11 Kbytes/sec
- Rewrite: took 11 Kbytes/sec
+Buffer size: 512, total bytes: 16352
+ Erase: throughput 1168 Kbytes/sec
+ Verify erase: throughput 50 Kbytes/sec
+ Write: throughput 11 Kbytes/sec
+ Verify write: throughput 50 Kbytes/sec
+ Rewrite: throughput 11 Kbytes/sec
+ Verify rewrite: throughput 49 Kbytes/sec
 
-Buffer size: 2048
- Erase: took 36 Kbytes/sec
- Write: took 11 Kbytes/sec
- Rewrite: took 11 Kbytes/sec
+Buffer size: 2048, total bytes: 16352
+ Erase: throughput 1168 Kbytes/sec
+ Verify erase: throughput 50 Kbytes/sec
+ Write: throughput 11 Kbytes/sec
+ Verify write: throughput 50 Kbytes/sec
+ Rewrite: throughput 11 Kbytes/sec
+ Verify rewrite: throughput 49 Kbytes/sec
 
 
 Performance test: Wear level page erase
-Buffer size: 128
- Erase: took 147 Kbytes/sec
- Write: took 123 Kbytes/sec
- Rewrite: took 2 Kbytes/sec
+Buffer size: 128, total bytes: 131008
+ Erase: throughput 9357 Kbytes/sec
+ Verify erase: throughput 385 Kbytes/sec
+ Write: throughput 120 Kbytes/sec
+ Verify write: throughput 385 Kbytes/sec
+ Rewrite: throughput 45 Kbytes/sec
+ Verify rewrite: throughput 385 Kbytes/sec
 
-Buffer size: 512
- Erase: took 147 Kbytes/sec
- Write: took 125 Kbytes/sec
- Rewrite: took 7 Kbytes/sec
+Buffer size: 512, total bytes: 131008
+ Erase: throughput 9357 Kbytes/sec
+ Verify erase: throughput 404 Kbytes/sec
+ Write: throughput 122 Kbytes/sec
+ Verify write: throughput 404 Kbytes/sec
+ Rewrite: throughput 72 Kbytes/sec
+ Verify rewrite: throughput 404 Kbytes/sec
 
-Buffer size: 2048
- Erase: took 151 Kbytes/sec
- Write: took 126 Kbytes/sec
- Rewrite: took 19 Kbytes/sec
+Buffer size: 2048, total bytes: 131008
+ Erase: throughput 8733 Kbytes/sec
+ Verify erase: throughput 409 Kbytes/sec
+ Write: throughput 123 Kbytes/sec
+ Verify write: throughput 409 Kbytes/sec
+ Rewrite: throughput 86 Kbytes/sec
+ Verify rewrite: throughput 410 Kbytes/sec
 
 
 Performance test: Basic flash access
-Buffer size: 128
- Erase: took 289 Kbytes/sec
- Write: took 124 Kbytes/sec
- Rewrite: N/A
-Buffer size: 512
- Erase: took 290 Kbytes/sec
- Write: took 126 Kbytes/sec
- Rewrite: N/A
-Buffer size: 2048
- Erase: took 289 Kbytes/sec
- Write: took 126 Kbytes/sec
- Rewrite: N/A
+Buffer size: 128, total bytes: 262144
+ Erase: throughput 292 Kbytes/sec
+ Verify erase: throughput 393 Kbytes/sec
+ Write: throughput 121 Kbytes/sec
+ Verify write: throughput 393 Kbytes/sec
+ Rewrite: N/A (not supported or failed.)
+ Verify rewrite: N/A (not supported or failed.)
+
+Buffer size: 512, total bytes: 262144
+ Erase: throughput 292 Kbytes/sec
+ Verify erase: throughput 406 Kbytes/sec
+ Write: throughput 122 Kbytes/sec
+ Verify write: throughput 407 Kbytes/sec
+ Rewrite: N/A (not supported or failed.)
+ Verify rewrite: N/A (not supported or failed.)
+
+Buffer size: 2048, total bytes: 262144
+ Erase: throughput 292 Kbytes/sec
+ Verify erase: throughput 410 Kbytes/sec
+ Write: throughput 123 Kbytes/sec
+ Verify write: throughput 410 Kbytes/sec
+ Rewrite: N/A (not supported or failed.)
+ Verify rewrite: N/A (not supported or failed.)
+
 
 Test complete.
+
 ```
 
-The Single Wear Page scheme was not tested since this would incur a high number of erases to a single page.
+The Single Wear Page scheme was not tested since this would incur a high number of erases to a single page, possibly
+prematurely destroying that page.
 
 Conclusions from the data above:
 
- * address level erase has the faster rewrite performace, at 11Kb/s, vs 7Kb/s for the wear levelling scheme. (The address
+ * the performace of page level erase is on par with direct flash access - 404 KiB/s read, and 123 KiB/s write. Larger
+   buffers provide a slight performance increase.
+ * address level erase has the slowest performace, at 11KiB/s write and 50KiB/s read, but this has an order of magnitude
+   better erase performance.
+
  level erase also has an order of magnitude better endurance since it erases pages less often.)
 
  * writing direct to flash is about 7x faster (including erase time), but doesn't support rewrites.
@@ -366,7 +414,7 @@ Conclusions from the data above:
  * compared to an Arduino, all schemes are significantly faster.
     The arduino eeprom requires 3.3ms to erase a single byte - equivalent to 0.3 Kb/s throughput.
 
- * with the wear levelling scheme, writing larger buffers improves throughput since the number of page erases and copies required is reduced.
+ * with the wear leveling scheme, writing larger buffers improves throughput since the number of page erases and copies required is reduced.
 
 Internally, the eeprom emulation uses a 128 byte buffer. This explains why the address erase scheme shoes no performance
 improvement when called with larger buffers. Increasing the size of the internal buffer may improve performance - see
@@ -399,7 +447,7 @@ writes to the same logical address. It does this through two key techniques:
  * redundant storage - multiple writes to the same logical address are
 implemented as writes to distinct physical addresses in flash.
 
- * wear levelling: a mapping from logical pages to physical pages is
+ * wear leveling: a mapping from logical pages to physical pages is
 maintained. When a logical page is erased, it is assigned to a new free
 physical page (using an even random distribution). This ensures updates
 to a single page are spread out over the area of flash allocated, so the
