@@ -1305,8 +1305,8 @@ class SparkExternalFlashDevice : public FlashDevice {
      * @return
      */
     virtual bool writePage(const void* data, flash_addr_t address, page_size_t length) {
-        // TODO: SPI interface shouldn't need variable data to write?
-        sFLASH_WriteBuffer((const uint8_t*) data, address, length);
+        // TODO: SPI interface shouldn't need mutable data buffer to write?
+        sFLASH_WriteBuffer(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(data)), address, length);
         return true;
     }
 
