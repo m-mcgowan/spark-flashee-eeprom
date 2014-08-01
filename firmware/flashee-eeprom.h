@@ -80,6 +80,10 @@ public:
     flash_addr_t pageAddress(page_count_t page) const {
         return flash_addr_t(page) * pageSize();
     }
+    
+    page_count_t addressPage(flash_addr_t address) const {
+        return address/pageSize();
+    }
 
     /**
      * Determines if the given address represents the start of a page.
@@ -87,6 +91,11 @@ public:
     bool isPageAddress(flash_addr_t address) const {
         return (address % pageSize()) == 0;
     }
+
+    inline bool isValidAddress(flash_addr_t address, page_size_t extent) const {
+        return address + extent <= length() && (extent==0 || (addressPage(address)==addressPage(address+extent-1)));
+    }
+
 
     bool writeEraseByte(uint8_t data, flash_addr_t address) {
         return writeErasePage(&data, address, 1);
@@ -300,7 +309,7 @@ public:
         page_size_t free = capacity_ - size_ - (read_pointer % flash.pageSize());
         return free;
     }
-
+    
 };
 
 class FlashStream {

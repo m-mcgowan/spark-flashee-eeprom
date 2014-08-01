@@ -49,15 +49,12 @@ class FakeFlashDevice : public FlashDevice {
     page_count_t pageCount_;
     page_size_t pageSize_;
     uint8_t* data_;
-
-    inline bool isValidRegion(flash_addr_t address, page_size_t length) const {
-        return address + length <= pageSize() * pageCount();
-    }
-
+    bool allowPageSpan;
+    
 public:
 
-    FakeFlashDevice(page_count_t pageCount, page_size_t pageSize) :
-    pageCount_(pageCount), pageSize_(pageSize) {
+    FakeFlashDevice(page_count_t pageCount, page_size_t pageSize, bool pageSpan=false) :
+    pageCount_(pageCount), pageSize_(pageSize), allowPageSpan(pageSpan) {
         flash_addr_t size = length();
         data_ = new uint8_t[size];
     }
@@ -65,6 +62,15 @@ public:
     virtual ~FakeFlashDevice() {
         delete[] data_;
     }
+
+    /**
+     * End address must be less than the maximum and if page spans are not allowed then
+     * the start and end address must be in the same page.
+     */
+    inline bool isValidRegion(flash_addr_t address, page_size_t extent) const {
+        return address + extent <= length() && (allowPageSpan || extent==0 || (addressPage(address)==addressPage(address+extent-1)));
+    }
+
 
     void eraseAll() {
         memset(data_, -1, length());
@@ -793,7 +799,7 @@ public:
         return success;
     }
 
-    inline bool writePage(const void* data, flash_addr_t address, page_size_t length) {
+    inline bool writePage(const void* data, flash_addr_t address, page_size_t length) {        
         // assume for now that it's within a single block. will deal with multiple blocks later
         return flash.writePage(data, physicalAddress(address, pageSize()), length);
     }
@@ -835,7 +841,7 @@ public:
         this->setPageInUse(oldPage, false);
         return offset == size;
     }
-
+        
 };
 
 /**
@@ -856,10 +862,6 @@ protected:
 
     flash_addr_t translateAddress(flash_addr_t address) const {
         return impl.physicalAddress(address, pageSize());
-    }
-
-    bool writeErasePageBuf(const void* const data, flash_addr_t address, page_size_t length, uint8_t* buf, page_size_t bufSize) {
-        return TranslatingFlashDevice::writeErasePageBuf(data, address, length, buf, bufSize);
     }
 
 public:
@@ -889,15 +891,15 @@ public:
      * @return
      */
     virtual bool erasePage(flash_addr_t address) {
-        return impl.erasePage(address);
+        return isValidAddress(address, 0) ? impl.erasePage(address) : false;
     }
 
     virtual bool writePage(const void* data, flash_addr_t address, page_size_t length) {
-        return impl.writePage(data, address, length);
+        return isValidAddress(address, length) ? impl.writePage(data, address, length) : false;
     }
 
     virtual bool readPage(void* data, flash_addr_t address, page_size_t length) const {
-        return impl.readPage(data, address, length);
+        return isValidAddress(address, length) ? impl.readPage(data, address, length) : false;
     }
 
     /**
@@ -912,7 +914,7 @@ public:
      * @return
      */
     virtual bool copyPage(flash_addr_t address, TransferHandler handler, void* data, uint8_t* buf, page_size_t bufSize) {
-        return impl.copyPage(address, handler, data, buf, bufSize);
+        return isValidAddress(address, 0) ? impl.copyPage(address, handler, data, buf, bufSize) : false;
     }
 
     /**
@@ -926,8 +928,8 @@ public:
      * @return
      */
     bool writeErasePage(const void* data, flash_addr_t address, page_size_t length) {
-        uint8_t buf[STACK_BUFFER_SIZE];
-        return writeErasePageBuf(data, address, length, buf, STACK_BUFFER_SIZE);
+        uint8_t buf[STACK_BUFFER_SIZE];        
+        return isValidAddress(address, length) ? TranslatingFlashDevice::writeErasePageBuf(data, address, length, buf, sizeof(buf)) : false;
     }
 
 };
