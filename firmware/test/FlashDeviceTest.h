@@ -21,6 +21,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "flashee-eeprom.h"
+#include "FlashTestUtil.h"
 #include "Generators.h"
 #include <memory>
 
@@ -34,7 +35,7 @@ template <class T> FlashDevice* CreateFlashDevice();
 template <class T> bool SupportsWriteErase() { return true; }
 
 template <typename T> 
-class FlashDeviceTest :  public ::testing::Test {
+class FlashDeviceTest : public ::testing::Test {
 protected:
         
     FlashDevice* const flash;
@@ -102,6 +103,21 @@ public:
         }
     }
     
+    void fillRegion(FlashDevice* flash, flash_addr_t start, flash_addr_t end, Generator& gen, bool eraseWrite) {
+        uint8_t buf[127];
+        while (start<end) {                        
+            page_size_t toWrite = min(sizeof(buf), end-start);
+            for (page_size_t i=0; i<toWrite; i++) {
+                buf[i] = gen.next();
+            }
+            if (eraseWrite)
+                ASSERT_TRUE(flash->writeErasePage(buf, start, toWrite)) << "unable to write flash addr:" << start << "len:" << toWrite;            
+            else
+                ASSERT_TRUE(flash->writePage(buf, start, toWrite)) << "unable to write flash addr:" << start << "len:" << toWrite;            
+            start += toWrite;
+        }
+    }
+
     void assertWrite(page_size_t offset, page_size_t count, const uint8_t* write, const uint8_t* read) {
         ASSERT_TRUE(this->flash->writePage(write, offset, count));        
         std::auto_ptr<uint8_t> _buf(new uint8_t[count]);
@@ -244,12 +260,90 @@ TYPED_TEST_P(FlashDeviceTest, RepeatedEraseWritePreservesRestOfPage) {
     }
 }
 
+TYPED_TEST_P(FlashDeviceTest, WriteOverPageFails) {
+    char buf[2];
+    ASSERT_FALSE(this->flash->writePage(buf, this->flash->pageSize()-1, 2));
+}
+
+TYPED_TEST_P(FlashDeviceTest, WriteEraseOverPageFails) {
+    char buf[2];
+    ASSERT_FALSE(this->flash->writeErasePage(buf, this->flash->pageSize()-1, 2));
+}
+
+TYPED_TEST_P(FlashDeviceTest, ReadOverPageFails) {    
+    char buf[2];
+    ASSERT_FALSE(this->flash->readPage(buf, this->flash->pageSize()-1, 2));
+}
+
+
+/**
+ * Randomly erases, writes and rewrites regions of flash memory, in parallel
+ * to a fake implementation and the tested implementation.  After
+ * each operation, the entire region of flash is compared.
+ */
+TYPED_TEST_P(FlashDeviceTest, StressTest) {
+    if (!this->SupportsWriteErase())
+        return;
+    
+    srand(0);       // make this deterministic
+    
+    const flash_addr_t length = this->flash->length();
+    FakeFlashDevice expected(this->flash->pageCount(), this->flash->pageSize());        // emulate the same logical size
+    //PageSpanFlashDevice actual(*this->flash);    
+    FlashDevice& actual = *this->flash;
+    
+    ASSERT_EQ(length, expected.length());
+    ASSERT_EQ(expected.pageSize(), this->flash->pageSize());
+    ASSERT_EQ(expected.pageCount(), this->flash->pageCount());
+    int pageSize = this->flash->pageSize();
+    actual.eraseAll();
+    expected.eraseAll();
+    ASSERT_TRUE(FlashTestUtil::assertSamePagewise(expected, actual)) << " erase";
+    char actualBuf[128];
+    char expectedBuf[128];
+    
+    
+    char msg[20];
+    flash_addr_t start, end;
+    for (int i=0; i<1000; i++) {
+        int op = rand()%3;
+        if (!(i%100))
+            printf("step %d",i);
+        start = rand()%length;        
+        end = start + rand()%(length-start);
+        end = start + rand()%(pageSize-(start%pageSize));
+        const uint8_t startFrom = rand()&0xFF;
+        SequenceGenerator gen1(startFrom);
+        SequenceGenerator gen2(startFrom);
+        switch (op) {
+            case 0:                
+                start -= (start%expected.pageSize());
+                expected.erasePage(start);
+                actual.erasePage(start);
+                break;
+            case 1:
+            case 2:
+                this->fillRegion(&expected, start, end, gen1, op==2);
+                this->fillRegion(&actual, start, end, gen2, op==2);
+                break;               
+        }
+        // now verify
+        ASSERT_TRUE(FlashTestUtil::assertSamePagewise(expected, actual)) << " step " << i;
+        ASSERT_TRUE(FlashTestUtil::assertSamePagewise(expected, actual)) << " step " << i << "(2nd compare)";
+    }
+}
+
+
+
+
 REGISTER_TYPED_TEST_CASE_P(FlashDeviceTest, HasNonZeroPageSize, HasNonZeroPageCount,
                             PageAddress,
                             ErasePageResetsData, ErasePageNoEffectOnOtherPages,
                             WriteDistinctValueToPages, SuccessiveWrittenValuesAreAnded,
                             CanWriteAfterErase, EraseWriteAllowsBitsToBeSet,
-                            EraseWritePreservesRestOfPage, RepeatedEraseWritePreservesRestOfPage
+                            EraseWritePreservesRestOfPage, RepeatedEraseWritePreservesRestOfPage,
+                            WriteOverPageFails, WriteEraseOverPageFails, ReadOverPageFails,
+                            StressTest
                             );
 
 

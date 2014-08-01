@@ -369,15 +369,14 @@ class PageSpanFlashDevice : public ForwardingFlashDevice {
     template<typename Data, typename Class> bool static chunk(Class* obj, Data* data, flash_addr_t address, page_size_t length,
             bool (*handler)(Class*, Data*, flash_addr_t, page_size_t)) {
         page_size_t size = obj->pageSize();
-        page_size_t offset = address % size;
         while (length > 0) {
+            page_size_t offset = address % size;
             page_size_t toWrite = min(size - offset, length);
             if (!handler(obj, data, address, toWrite))
                 return false;
             data += toWrite;
             address += toWrite;
             length -= toWrite;
-            offset = 0;
         }
         return true;
     }
@@ -671,11 +670,11 @@ public:
      */
     page_index_t allocateLogicalPage(page_index_t page) const {
         page_index_t free = nextFreePage(randomPage() % maxPage());
-        setPageInUse(free, true);
         if (readHeader(free) != 0xFFFF) // if the header is clean the rest will be.
             flash.erasePage(flash.pageAddress(free));
         assignLogicalPage(page, free);        
         writeHeader(free, uint16_t(page) | 0x7F00); // bit 15 clear means in use.
+        setPageInUse(free, true);
         return free;
     }
 

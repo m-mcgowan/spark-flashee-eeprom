@@ -18,6 +18,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "flashee-eeprom.h"
+#include "FlashTestUtil.h"
 
 using namespace Flashee;
 
@@ -103,3 +104,36 @@ TEST(LogicalPageMapperTest, LogicalMappingIsPersisted) {
     ASSERT_STREQ(buf, msg) << "expected data to be persisted for use by second mapper";
 
 }
+
+TEST(LogicalPageMapperTest, ContentIsPersisted) {    
+
+    FakeFlashDevice fake(256, 4096);
+    LogicalPageMapper<> mapper(fake, 254);
+    PageSpanFlashDevice span(mapper);
+    
+    char buf[4096*15];    
+    char buf2[4096*15];    
+    // fill memory
+    for (int i=0; i<512*15; i++) {        
+        buf[i] = i;        
+    }
+    
+    ASSERT_TRUE(span.write(buf, 234, sizeof(buf)));
+    span.read(buf2, 234, sizeof(buf));    
+    ASSERT_TRUE(!memcmp(buf, buf2, sizeof(buf))) << "Initial read failed";
+        
+    LogicalPageMapper<> mapper2(fake, 254);
+    ASSERT_TRUE(FlashTestUtil::assertSamePagewise(mapper, mapper2)) << "mapper compare failed";
+    
+    memset(buf2, -1, sizeof(buf2));
+    span.read(buf2, 234, sizeof(buf));    
+    ASSERT_TRUE(!memcmp(buf, buf2, sizeof(buf))) << "Read after compare failed";
+       
+    // do it twice, just to confirm that reading doesn't change the content
+    ASSERT_TRUE(FlashTestUtil::assertSamePagewise(mapper, mapper2)) << "2nd mapper compare failed";
+    
+    memset(buf2, -1, sizeof(buf2));
+    span.read(buf2, 234, sizeof(buf));    
+    ASSERT_TRUE(!memcmp(buf, buf2, sizeof(buf))) << "2nd Read after compare failed";
+}
+

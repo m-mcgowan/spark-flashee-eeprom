@@ -41,3 +41,41 @@ TEST(FakeFlashDeviceTest, EraseAll) {
         }
     }
 }
+
+// These tests are for non-virtual methods on the FlashDevice interface
+TEST(FakeFlashDeviceTest, PageAddress) {
+    FakeFlashDevice fake(23, 10);
+    ASSERT_EQ(30, fake.pageAddress(3));
+}
+
+TEST(FakeFlashDeviceTest, PageAddressOutOfBounds) {
+    FakeFlashDevice fake(23, 10);
+    ASSERT_EQ(300, fake.pageAddress(30));
+}
+
+TEST(FakeFlashDeviceTest, AddressPageOnPageBoundary) {
+    FakeFlashDevice fake(23, 10);
+    ASSERT_EQ(3, fake.addressPage(30));
+}
+
+TEST(FakeFlashDeviceTest, AddressPageMiddleOfPage) {
+    FakeFlashDevice fake(23, 10);
+    ASSERT_EQ(3, fake.addressPage(35));
+}
+
+TEST(FakeFlashDeviceTest, AddressPageEndOfPage) {
+    FakeFlashDevice fake(23, 10);
+    ASSERT_EQ(3, fake.addressPage(39));
+}
+
+TEST(FakeFlashDeviceTest, PageSpanValidWhenConfigured)
+{
+    FakeFlashDevice fake(40, 10, true);
+    ASSERT_TRUE(fake.isValidRegion(38,48));
+}
+
+TEST(FakeFlashDeviceTest, PageSpanNotValidByDefault)
+{
+    FakeFlashDevice fake(40, 10);
+    ASSERT_FALSE(fake.isValidRegion(38,48));
+}
