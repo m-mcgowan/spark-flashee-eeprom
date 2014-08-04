@@ -137,3 +137,54 @@ TEST(LogicalPageMapperTest, ContentIsPersisted) {
     ASSERT_TRUE(!memcmp(buf, buf2, sizeof(buf))) << "2nd Read after compare failed";
 }
 
+
+const int blockOffset = 50;
+const int blockSize = blockOffset*4;
+
+bool verifyEepromArea(FlashDevice* device, uint8_t value) {
+    uint8_t* buf = new uint8_t[blockSize];    
+    flash_addr_t offset = flash_addr_t(value) * blockOffset;
+    device->read(buf, offset, blockSize);
+    bool success = true;
+    for (int i=0; i<blockSize && success; i++) {
+        if (buf[i]!=value) {
+            success = false;            
+        }
+    }
+    delete[] buf;
+    return success;
+}
+
+void fillEepromArea(FlashDevice* device, uint8_t value) {
+    char* buf = new char[blockSize];
+    memset(buf, value, blockSize);
+    flash_addr_t offset = flash_addr_t(value) * blockOffset;
+    device->write(buf, offset, blockSize);
+    delete[] buf;
+    
+}
+
+TEST(LogicalPageMapperTest, StressReset) {
+    FakeFlashDevice fake(384, 4096);    // the persistent flash.    
+    {
+    LogicalPageMapper<> mapper(fake, 254);
+    mapper.eraseAll();
+    }
+    
+    for (uint8_t i=0; i<255; i++) {
+        {   // separate blocks so scope is restricted
+            LogicalPageMapper<> mapper(fake, 254);
+            PageSpanFlashDevice span(mapper);
+            fillEepromArea(&span, i);
+            ASSERT_TRUE(verifyEepromArea(&span, i)) << "Error on value " << i << " before emulated reset";
+        }
+        {
+            LogicalPageMapper<> mapper(fake, 254);
+            PageSpanFlashDevice span(mapper);
+            ASSERT_TRUE(verifyEepromArea(&span, i)) << "Error on value " << i << " after emulated reset";
+        }
+    }
+}
+
+  
+

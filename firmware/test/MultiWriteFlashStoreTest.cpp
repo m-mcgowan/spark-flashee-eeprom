@@ -36,6 +36,16 @@ TEST(MultiWriteSlotAccess, readSlot_initialzied7) {
     ASSERT_EQ(0x81, MultiWriteSlotAccess::readSlot(slot));
 }
 
+/*
+ * In principle, the bitmap should never be 0. But in practice this can happen if
+ * the scheme is created on top of previously initialized data. 
+ */
+TEST(MultiWriteSlotAccess, readSlot_invalid_bitmap) {
+    uint8_t slot[] = { 0x00, 0xAB, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x1C };
+    ASSERT_EQ(0x0, MultiWriteSlotAccess::readSlot(slot));
+}
+
+
 #define ASSERT_ARRAYS_EQ(expected, actual) \
     ASSERT_THAT(std::vector<uint8_t>(expected, expected + sizeof(expected)), \
             ::testing::ElementsAreArray(actual))
@@ -89,6 +99,33 @@ TEST(MultiWriteSlotAccess, writeSlot_7_destructive_inplace) {
     uint8_t expected[] = { 0x80, 0xAB, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x10 };
     ASSERT_ARRAYS_EQ(expected, slot);
 }
+
+/*
+ * In principle, the bitmap should never be 0. But in practice this can happen if
+ * the scheme is created on top of previously initialized data. 
+ */
+TEST(MultiWriteSlotAccess, writeSlot_invalid_bitmap) {
+    uint8_t slot[] = { 0x00, 0xAB, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x1C };
+    ASSERT_FALSE(MultiWriteSlotAccess::writeSlot(0x12, slot, false));
+    uint8_t expected[] = { 0x00, 0xAB, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x1C };
+    ASSERT_ARRAYS_EQ(expected, slot);    
+}
+
+TEST(MultiWriteSlotAccess, findLastUsedIndex_bitmap_0) {
+    ASSERT_EQ(MultiWriteSlotAccess::findLastUsedIndex(0), 8);    
+}
+
+TEST(MultiWriteSlotAccess, findLastUsedIndex_bitmap_0x80) {
+    ASSERT_EQ(MultiWriteSlotAccess::findLastUsedIndex(0x80), 7);
+}
+
+TEST(MultiWriteSlotAccess, findLastUsedIndex_bitmap_0xFF) {
+    ASSERT_EQ(MultiWriteSlotAccess::findLastUsedIndex(0xFF), 0);
+}
+
+
+
+
 
 
 #if 0

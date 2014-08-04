@@ -14,11 +14,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
 #include "flashee-eeprom.h"
 #include "diskio.h"
 #include "FlashIO.h"
 #include "ff.h"
+
+
+#ifndef FLASHEE_DEBUG_DISKIO
+#define FLASHEE_DEBUG_DISKIO 0
+#endif
+
+#if FLASHEE_DEBUG_DISKIO
+#include <stdio.h>
+#define DEBUG_DISKIO(fmt, ...) printf(fmt"\r\n", __VA_ARGS__);
+#else
+#define DEBUG_DISKIO(...)
+#endif
+
 
 namespace Flashee {    
     
@@ -61,23 +73,23 @@ FRESULT Devices::createFATRegion(flash_addr_t startAddress, flash_addr_t endAddr
     FlashDevice* device = createMultiPageEraseImpl(startAddress, endAddress, 2);
     if (device==NULL)
         return FR_INVALID_PARAMETER;
-    
+    device = new PageSpanFlashDevice(*device);
     return f_setFlashDevice(device, pfs, formatCmd);
 }
 
-static FlashDevice* flash = NULL;
+FlashDevice* fat_flash = NULL;
 
 
 const page_size_t sector_size = 512;
 
 bool is_formatted() {
     uint8_t sig[2];
-    flash->read(sig, 510, 2);
+    fat_flash->read(sig, 510, 2);
     return (sig[0]==0x55 && sig[1]==0xAA);
 }
 
 FRESULT low_level_format() {
-    flash->eraseAll();
+    fat_flash->eraseAll();
     FRESULT result = f_mkfs("", 1, sector_size);
     if (result==FR_OK && !is_formatted())
         result = FR_DISK_ERR;        
@@ -86,14 +98,14 @@ FRESULT low_level_format() {
 
 bool needs_low_level_format() {
     uint8_t sig[2];
-    flash->read(sig, 510, 2);
+    fat_flash->read(sig, 510, 2);
     return ((sig[0]!=0x55 && sig[1]!=0xAA) && (sig[0]&sig[1])!=0xFF);   
 }
 
 FRESULT f_setFlashDevice(FlashDevice* device, FATFS* pfs, FormatCmd cmd) {
-    delete flash;
-    flash = device;
-    if (!flash)
+    delete fat_flash;
+    fat_flash = device;
+    if (!fat_flash)
         return FR_OK;
     
     FRESULT result = f_mount(pfs, "", 0);
@@ -120,14 +132,16 @@ DSTATUS disk_initialize (
 	BYTE pdrv				/* Physical drive nmuber (0..) */
 )
 {
-    if (pdrv)
-        return STA_NOINIT;
-            
-    // determine if boot sector is present, if not, then erase area    
-    if (needs_low_level_format()) {
-        low_level_format();
+    DSTATUS status = STA_NOINIT;
+    if (!pdrv) {            
+        // determine if boot sector is present, if not, then erase area    
+        if (needs_low_level_format()) {
+            low_level_format();
+        }
+        status = 0;
     }
-    return 0;
+    DEBUG_DISKIO("disk_initialize(%d)->%d", pdrv, status);
+    return status;
 }
 
 
@@ -140,12 +154,10 @@ DSTATUS disk_status (
 	BYTE pdrv		/* Physical drive nmuber (0..) */
 )
 {
-    if (pdrv)
-        return STA_NOINIT;
-
-	return 0; //needs_low_level_format() ? STA_NOINIT : 0;
+    DSTATUS result = pdrv ? STA_NOINIT : 0;
+    DEBUG_DISKIO("disk_status(%d)->%d", pdrv, result);
+    return result;
 }
-
 
 
 /*-----------------------------------------------------------------------*/
@@ -159,11 +171,13 @@ DRESULT disk_read (
 	UINT count		/* Number of sectors to read (1..128) */
 )
 {
-	if (pdrv)
-        return RES_PARERR;
-        
-    return flash->read(buff, sector*sector_size, count*sector_size) ?
-        RES_OK : RES_PARERR;
+    DRESULT result = RES_PARERR;
+	if (!pdrv) {
+        result = fat_flash->read(buff, sector*sector_size, count*sector_size) ?
+            RES_OK : RES_PARERR;
+    }
+    DEBUG_DISKIO("disk_read(%d, %x, %ul, %u)->%d", pdrv, buff, sector, count, result);
+    return result;
 }
 
 
@@ -180,11 +194,13 @@ DRESULT disk_write (
 	UINT count			/* Number of sectors to write (1..128) */
 )
 {
-	if (pdrv)
-        return RES_PARERR;
-        
-    return flash->write(buff, sector*sector_size, count*sector_size) ?
-        RES_OK : RES_PARERR;
+	DRESULT result = RES_PARERR;
+    if (!pdrv) {
+        result = fat_flash->write(buff, sector*sector_size, count*sector_size) ?
+            RES_OK : RES_PARERR;
+    }        
+    DEBUG_DISKIO("disk_write(%d, %x, %ul, %u)->%d", pdrv, buff, sector, count, result);
+    return result;
 }
 #endif
 
@@ -201,20 +217,20 @@ DRESULT disk_ioctl (
 )
 {
     DWORD* dw = (DWORD*)buff;
-    
+    DRESULT result = RES_PARERR;
 	switch (cmd) {
         case CTRL_SYNC: return RES_OK;
         case GET_SECTOR_COUNT:
-            *dw = flash->length()/sector_size;
-            return RES_OK;
+            *dw = fat_flash->length()/sector_size;
+            result = RES_OK;
+            break;
         case GET_SECTOR_SIZE:
             *dw = sector_size;
-            return RES_OK;
-        case GET_BLOCK_SIZE:
-            *dw = flash->pageSize()/sector_size;
-            return RES_OK;
+            result = RES_OK;
+            break;
     }
-	return RES_PARERR;
+	DEBUG_DISKIO("disk_ioctl(%d, %d, %d)->%d", pdrv, cmd, *dw, result);
+    return result;
 }
 #endif
 

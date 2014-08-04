@@ -30,44 +30,84 @@ void setup()
     Serial.begin(9600);
 }
 
-bool eraseAll(FlashDevice* device, void* args) {
-    return device->eraseAll();
-}
-
 /**
  * Struct for the buffer details. Allows all the required arguments to be passed as a single pointer
  */
 struct BufArgs {
     void* buf;
+    void* buf2;
     page_size_t bufSize;
     flash_addr_t end;
 };
 
+bool eraseAll(FlashDevice* device, void* args) {
+    BufArgs& bufArgs = *(BufArgs*)args;
+    page_size_t pageSize = device->pageSize();
+    bool success = true;
+    for (flash_addr_t i=0; i<bufArgs.end; i+=pageSize) {
+        success = success && device->erasePage(i);
+    }
+    return success;
+}
+
+bool verify(FlashDevice* device, void* args) {
+    BufArgs& bufArgs = *(BufArgs*)args;
+    page_size_t bufSize = bufArgs.bufSize;
+    bool success = true;
+    page_size_t pageSize = device->pageSize();
+    for (flash_addr_t p = 0; p<bufArgs.end; ) {
+        page_size_t offset = 0;
+        page_size_t pageEnd = min(pageSize, bufArgs.end-p);
+        while (offset<pageSize) {
+            page_size_t toRead = min(pageSize-offset, bufSize);
+            success = success && device->readPage(bufArgs.buf2, offset, toRead);
+            success = success && !memcmp(bufArgs.buf2, bufArgs.buf, toRead);
+            offset += toRead;
+        }
+        p += pageEnd;
+    }
+    return success;
+}
+
 bool write(FlashDevice* device, void* args) {
     BufArgs& bufArgs = *(BufArgs*)args;
-    page_size_t size = bufArgs.bufSize;
+    page_size_t bufSize = bufArgs.bufSize;
     bool success = true;
-    for (flash_addr_t i = 0; i<bufArgs.end; i+=size) {
-        page_size_t toWrite = min(size, bufArgs.end-i);
-        success = success && device->writePage(bufArgs.buf, i, toWrite);
+    page_size_t pageSize = device->pageSize();
+    for (flash_addr_t p = 0; p<bufArgs.end; ) {
+        page_size_t offset = 0;
+        page_size_t pageEnd = min(pageSize, bufArgs.end-p);
+        while (offset<pageSize) {
+            page_size_t toWrite = min(pageSize-offset, bufSize);
+            success = success && device->writePage(bufArgs.buf, offset, toWrite);
+            offset += toWrite;
+        }
+        p += pageEnd;
     }
     return success;
 }
 
 bool rewrite(FlashDevice* device, void* args) {
     BufArgs& bufArgs = *(BufArgs*)args;
-    page_size_t size = bufArgs.bufSize;
+    page_size_t bufSize = bufArgs.bufSize;
     bool success = true;
-    for (flash_addr_t i = 0; i<bufArgs.end; i+=size) {
-        page_size_t toWrite = min(size, bufArgs.end-i);
-        success = success && device->writeErasePage(bufArgs.buf, i, toWrite);
+    page_size_t pageSize = device->pageSize();
+    for (flash_addr_t p = 0; p<bufArgs.end; ) {
+        page_size_t offset = 0;
+        page_size_t pageEnd = min(pageSize, bufArgs.end-p);
+        while (offset<pageSize) {
+            page_size_t toWrite = min(pageSize-offset, bufSize);
+            success = success && device->writeErasePage(bufArgs.buf, offset, toWrite);
+            offset += toWrite;
+        }
+        p += pageEnd;
     }
     return success;
 }
 
 typedef bool (*TimeFunction)(FlashDevice* device, void* args);
 
-void time(TimeFunction fn, FlashDevice* device, void*args, const char* opName, flash_addr_t byteCount) {
+void time(TimeFunction fn, FlashDevice* device, void* args, const char* opName, flash_addr_t byteCount) {
     uint32_t start = millis();
     bool success = fn(device, args);
     uint32_t end = millis();
@@ -77,37 +117,49 @@ void time(TimeFunction fn, FlashDevice* device, void*args, const char* opName, f
     Serial.print(opName);
     Serial.print(':');
     if (success) {
-        Serial.print(" took ");
+        Serial.print(" throughput ");
         Serial.print(byteCount/duration);
         Serial.println(" Kbytes/sec");
     }
     else {
-        Serial.print(" N/A ");
+        Serial.println(" N/A (not supported or failed.)");
     }
 }
 
 
-void performaceTestSize(FlashDevice* device, uint8_t* buf, page_size_t bufSize) {
+void performaceTestSize(FlashDevice* device, uint8_t* buf, uint8_t* buf2, page_size_t bufSize) {
     flash_addr_t end = device->length();
 
     Serial.print("Buffer size: ");
-    Serial.println(bufSize);
-
-    // erase
-    time(eraseAll, device, NULL, "Erase", end);
+    Serial.print(bufSize);
+    Serial.print(", total bytes: ");
+    Serial.println(end);
 
     BufArgs args;
     args.buf = buf;
+    args.buf2 = buf2;
     args.bufSize = bufSize;
     args.end = end;
+
+    // erase
+    time(eraseAll, device, &args, "Erase", end);
+
+    memset(buf, -1, bufSize);
+    time(verify, device, & args, "Verify erase", end);
 
     // write (so non-eeprom devices can be profiled)
     memset(buf, 0xA9, bufSize);
     time(write, device, &args, "Write", end);
 
+    time(verify, device, & args, "Verify write", end);
+
+
     // write erase (if supported)
     memset(buf, 0x9A, bufSize);
     time(rewrite, device, &args, "Rewrite", end);
+
+    time(verify, device, & args, "Verify rewrite", end);
+
 
     Serial.println();
 }
@@ -122,9 +174,10 @@ void performanceTest(FlashDevice* device, const char* name) {
     Serial.println(name);
 
     uint8_t buf[2048];
-    performaceTestSize(device, buf, 128);
-    performaceTestSize(device, buf, 512);
-    performaceTestSize(device, buf, 2048);
+    uint8_t buf2[2048];
+    performaceTestSize(device, buf, buf2, 128);
+    performaceTestSize(device, buf, buf2, 512);
+    performaceTestSize(device, buf, buf2, 2048);
     performanceTestByteRewrite(device);
 
     Serial.println();
@@ -140,7 +193,7 @@ void loop()
             Serial.println("Running tests");
             performanceTest(Devices::createAddressErase(0, 4096*256, 256-32), "Address level erase");
             performanceTest(Devices::createWearLevelErase(0, 4096*256, 256-32), "Wear level page erase");
-            performanceTest(Devices::createUserFlashRegion(0, 4096*32), "Basic flash access");
+            performanceTest(Devices::createUserFlashRegion(0, 4096*64), "Basic flash access");
             Serial.println("Test complete.");
         }
     }

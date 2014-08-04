@@ -44,8 +44,8 @@ FlashDevice* CreateFlashDevice<SinglePageWear>() {
     return eeprom;
 }
 
-//INSTANTIATE_TYPED_TEST_CASE_P(Fake, FlashDeviceTest, FakeFlashDevice);
+INSTANTIATE_TYPED_TEST_CASE_P(Fake, FlashDeviceTest, FakeFlashDevice);
 INSTANTIATE_TYPED_TEST_CASE_P(FakeLogicalMapper, FlashDeviceTest, LogicalPageMapper<>);
-//INSTANTIATE_TYPED_TEST_CASE_P(FakeEepromEmulation, FlashDeviceTest, MultiWriteFlashStore);
-//INSTANTIATE_TYPED_TEST_CASE_P(FakeSinglePageWear, FlashDeviceTest, SinglePageWear);
+INSTANTIATE_TYPED_TEST_CASE_P(FakeEepromEmulation, FlashDeviceTest, MultiWriteFlashStore);
+INSTANTIATE_TYPED_TEST_CASE_P(FakeSinglePageWear, FlashDeviceTest, SinglePageWear);
 

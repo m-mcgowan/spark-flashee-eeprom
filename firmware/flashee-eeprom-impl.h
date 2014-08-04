@@ -578,7 +578,7 @@ public:
         bool erased = false;
         if (header != FORMAT_HEADER_SIGNATURE) {
             erased = true;
-            for (page_index_t i = max+1; i-- > 0;) {
+            for (page_index_t i = max+1; i-->0; ) {
                 erasePageIfNecessary(i);
             }
             writeHeader(max, FORMAT_HEADER_SIGNATURE);
@@ -668,13 +668,15 @@ public:
      * @param page
      * @return The physical page allocated.
      */
-    page_index_t allocateLogicalPage(page_index_t page) const {
+    page_index_t allocateLogicalPage(page_index_t page, uint8_t persistInUse=true) const {
         page_index_t free = nextFreePage(randomPage() % maxPage());
         if (readHeader(free) != 0xFFFF) // if the header is clean the rest will be.
             flash.erasePage(flash.pageAddress(free));
         assignLogicalPage(page, free);        
-        writeHeader(free, uint16_t(page) | 0x7F00); // bit 15 clear means in use.
         setPageInUse(free, true);
+        if (persistInUse) {
+            writeHeader(free, uint16_t(page) | 0x7F00); // bit 15 clear means in use.
+        }
         return free;
     }
 
@@ -790,7 +792,9 @@ public:
                 logicalPageMap[page] = max; // mark as no allocation
                 if (flash.erasePage(flash.pageAddress(physicalPage))) {
                     setPageInUse(physicalPage, false);
+#if PAGE_MAPPER_PRE_ALLOCATE_PAGES
                     allocateLogicalPage(page);
+#endif                    
                     success = true;
                 }
             }
@@ -821,7 +825,8 @@ public:
     bool copyPage(flash_addr_t address, TransferHandler handler, void* data, uint8_t* buf, page_size_t bufSize) {
         page_index_t logicalPage = address / pageSize();
         page_index_t oldPage = this->physicalPageFor(logicalPage);
-        page_index_t newPage = this->allocateLogicalPage(logicalPage);
+        page_index_t newPage = this->allocateLogicalPage(logicalPage, false);
+        this->writeHeader(newPage, uint16_t(logicalPage) | 0xFF00);     // make the header dirty, but flagged as not allocated
         page_size_t offset = 0;
         page_size_t size = pageSize();
         flash_addr_t oldBase = flash.pageAddress(oldPage) + headerSize;
@@ -836,7 +841,11 @@ public:
                 break;
             offset += toRead;
         }
-
+        // bring new page online now that it is completely written
+        this->writeHeader(newPage, uint16_t(logicalPage) | 0x7F00); // bit 15 clear means in use.)
+        // a power failure here would mean either the new or the old page are found, depending upon their order in flash
+        this->writeHeader(oldPage, 0);          
+        // now the old page is discarded
         this->setPageInUse(oldPage, false);
         return offset == size;
     }
@@ -950,6 +959,9 @@ public:
      */
     static uint8_t readSlot(uint8_t* slot) {
         uint8_t bitmap = *slot;
+        if (!bitmap)
+            return 0;
+        
         // NB: this also works for the special case when the bitmap is 0xFF,
         // meaning, uninitialised. The resulting index will be 0, which returns the bitmap, 0xFF
         int index = 0; // find the last used index.
@@ -960,6 +972,16 @@ public:
         return slot[index];
     }
 
+    static uint8_t findLastUsedIndex(uint8_t bitmap) {
+        uint8_t index = 0;
+        uint8_t mask = 1;
+        while (!(bitmap & mask) && mask) { // bit is 0, index used
+            index++;
+            mask <<= 1;
+        }
+        return index;
+    }
+    
     /**
      * Writes a byte value to the slot. The byte is written in the current slot.
      * A slot is 8 bytes wide. The first byte is a bitmap, and subsequent 7 bytes
@@ -982,12 +1004,7 @@ public:
             }
             success = true;
         } else {
-            int index = 0; // find the last used index.
-            uint8_t mask = 1;
-            while (!(bitmap & mask)) { // bit is 0, index used
-                index++;
-                mask <<= 1;
-            }
+            int index = findLastUsedIndex(bitmap); // find the last used index.
 
             success = ((slot[index] &= data) == data || inPlace);
             if (!success) { // if cannot update in place
