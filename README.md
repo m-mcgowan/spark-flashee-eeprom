@@ -30,15 +30,15 @@ Setting up your environment
 ---------------------------
 
 - If you're using the online IDE, click on "libraries", then "flashee-eeprom", then "Include in app", and finally select the app you
-want to use the library with. This will automatically add the include directive to bring in the header file.
+want to use the library with. This will automatically add the include directive to bring in the library header file.
 
-- If you're compiling locally using the makefile, copy files from the `firmware` folder in the repo.
- - copy all the *.h files to a new folder `core-firmware\inc\flashee-eeprom`,
- - copy all the *.cpp files to `core-firmware\src`
- - `core-firmware\src\build.mk` and add these additional lines:
+- If you're compiling locally using the core-firmware makefile, clone the github repo to the same folder that contains
+`core-firmware` (so core-firmware and spark-flashee-eeprom in the same folder on your machine.).
+ - edit `core-firmware\src\build.mk` and add these additional lines:
     ```
-    CPPSRC += $(TARGET_SRC_PATH)/ff.cpp
-    CPPSRC += $(TARGET_SRC_PATH)/flashee-eeprom.cpp
+    INCLUDE_DIRS += ../spark-flashee-eeprom/firmware
+    CPPSRC += ../spark-flashee-eeprom/firmware/flashee-eeprom.cpp
+    CPPSRC += ../spark-flashee-eeprom/firmware/ff.cpp
     ```
 
 Using the library
@@ -46,8 +46,15 @@ Using the library
 
 To use the library in application code, include the header file and import the namespace, like this:
 
+In the online IDE:
 ```c++
     #include "flashee-eeprom/flashee-eeprom.h"
+    using namespace Flashee;
+```
+
+Local build:
+```c++
+    #include "flashee-eeprom.h"
     using namespace Flashee;
 ```
 
