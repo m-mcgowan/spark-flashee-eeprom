@@ -323,7 +323,7 @@ to run and produces output similar to this:
 
 Performance Profiling
 =====================
-The example code [`performance-profile.cpp`](blob/master/firmware/examples/performace-profile.cpp) profiles the direct flash
+The example code [`performance-profile.cpp`](firmware/examples/performace-profile.cpp) profiles the direct flash
 access and 2 types of eeprom emulation. The results are below:
 
 ```
