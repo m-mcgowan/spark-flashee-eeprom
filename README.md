@@ -35,11 +35,12 @@ want to use the library with. This will automatically add the include directive 
 - If you're compiling locally using the core-firmware makefile, clone the github repo to the same folder that contains
 `core-firmware` (so core-firmware and spark-flashee-eeprom in the same folder on your machine.).
  - edit `core-firmware\src\build.mk` and add these additional lines:
-    ```
+
+ ```
     INCLUDE_DIRS += ../spark-flashee-eeprom/firmware
     CPPSRC += ../spark-flashee-eeprom/firmware/flashee-eeprom.cpp
     CPPSRC += ../spark-flashee-eeprom/firmware/ff.cpp
-    ```
+ ```
 
 Using the library
 -----------------
@@ -59,7 +60,7 @@ Local build:
 ```
 
 To gain access to the services of `flashee`, you use the `Devices` class, which provides methods for creating the
-various flash devices available.  You typically call a `Devices` method in setup() and store the result in a
+various flash devices available.  You typically call a `Devices` method in `setup()` and store the result in a
 global pointer. Like this:
 
 ```c++
@@ -86,8 +87,8 @@ If you need more than 128Kb of rewritable storage, the next step down the endura
 ```
 
 This uses wear leveling to spread the erases out over the flash region. Endurance an order of magnitude less than the address erase scheme
- above, but is potentially 1-2 orders of magnitude better than manually erasing and writing directly to flash.
-  This scheme has much less overhead, and can offer upto 1MB of flash.
+above, but is potentially 1-2 orders of magnitude better than manually erasing and writing directly to flash.
+This scheme has much less overhead, and can offer up to 1MB of flash.
 
 To store data:
 
@@ -322,7 +323,7 @@ to run and produces output similar to this:
 
 Performance Profiling
 =====================
-The example code [`performance-profile.cpp`](firmware/examples/performance-profile.cpp) profiles the direct flash
+The example code [`performance-profile.cpp`](blob/master/firmware/examples/performace-profile.cpp) profiles the direct flash
 access and 2 types of eeprom emulation. The results are below:
 
 ```
@@ -452,6 +453,7 @@ even address/even length.)
 
 Emulation Layers
 ----------------
+
 The library provides a random read/write access device, similar to
 EEPROM from the external flash on the spark. It's implemented as one or more layers on
 top of the flash API. These layers take care of page erases and provide multiple
@@ -489,7 +491,8 @@ necessary. This is typically when a destructive write is performed - writing
 a 1 bit to a location where there was previously a 0.
 
 Direct with erase copy
-^^^^^^^^^^^^^^^^^^^^^^
+......................
+
 This scheme stores the data directly in flash at the address
 specified. When a page erase is needed to reset 0 bits back to 1, the page
 is copied to a reserved page in flash. The original page is then erased
@@ -527,7 +530,8 @@ the arduino allows 10^5 erases, this is already surpassing eeprom wear
 levels.
 
 Redundant Storage
-^^^^^^^^^^^^^^^^^
+.................
+
 This scheme allows multiple destructive writes to the same logical
 address without requiring an erase in the underlying flash. It achieves this by
 representing each logical byte as a 8-byte slot. Data is written until the slot
