@@ -444,7 +444,7 @@ Implementation Details
 Development
 -----------
 I developed the library initially as a standalone library compiled on regular
-c++ on my desktop. Compared to embedded development, this allowed a
+gnu c++ on my desktop. Compared to embedded development, this allowed a
 faster development cycle and easier debugging. For testing, the flash
 memory was faked using a `FakeFlashDevice` class that emulated a flash
 device in memory (ANDed writes, page erases and read/write only on
