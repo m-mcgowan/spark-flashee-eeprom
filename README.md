@@ -430,7 +430,7 @@ Conclusions from the data above:
 
  * with the wear leveling scheme, writing larger buffers improves throughput since the number of page erases and copies required is reduced.
 
-Internally, the eeprom emulation uses a 128 byte buffer. This explains why the address erase scheme shoes no performance
+Internally, the eeprom emulation uses a 128 byte buffer. This explains why the address erase scheme shows no performance
 improvement when called with larger buffers. Increasing the size of the internal buffer may improve performance - see
 `STACK_BUFFER_SIZE` in the headers.
 
@@ -444,7 +444,7 @@ Implementation Details
 Development
 -----------
 I developed the library initially as a standalone library compiled on regular
-g++ on my desktop. Compared to embedded development, this allowed a
+gnu c++ on my desktop. Compared to embedded development, this allowed a
 faster development cycle and easier debugging. For testing, the flash
 memory was faked using a `FakeFlashDevice` class that emulated a flash
 device in memory (ANDed writes, page erases and read/write only on
