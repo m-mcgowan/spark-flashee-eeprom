@@ -72,6 +72,16 @@ public:
         return write(s, address, strlen(s)+(includeNull?1:0));
     }
 
+    template <typename T> inline bool write(const T& data, flash_addr_t address)
+    {
+        return write(&data, address, sizeof(data));
+    }
+
+    template <typename T> inline bool read(T& data, flash_addr_t address)
+    {
+        return read(&data, address, sizeof(data));
+    }
+
     /**
      * Converts a page index [0,N) into the corresponding read/write address.
      * @param page  The page to convert to an address.
@@ -328,6 +338,14 @@ public:
             capacity_(flash.pageAddress(flash.pageCount())), size_(0) {
     }
 
+    template<typename T> inline page_size_t write(const T& data) {
+        return write(&data, sizeof(data));
+    }
+
+    template<typename T> inline page_size_t read(T& data) const {
+        return read(&data, sizeof(data));
+    }
+
 
     page_size_t write(const void* buf, page_size_t length) {
         return write_impl(buf, length, true);
@@ -414,6 +432,11 @@ public:
         advance(length);
     }
 
+    template<typename T> inline void read(T& data)
+    {
+        read(&data, sizeof(T));
+    }
+
     uint8_t read() {
         uint8_t result;
         read(&result, 1);
@@ -447,6 +470,12 @@ public:
 
     FlashWriter(FlashDevice* device, flash_addr_t start=0)
             : FlashStream(*device, start) {}
+
+
+    template<typename T> inline void write(const T& data)
+    {
+        write(&data, sizeof(T));
+    }
 
     void write(const void* buf, page_size_t length) {
         flash.write(buf, address, length);
@@ -527,7 +556,7 @@ public:
     #error Unknown Platform
     #endif
 #else
-            return &userFlash();
+    return &userFlash();
 #endif
     }
 
