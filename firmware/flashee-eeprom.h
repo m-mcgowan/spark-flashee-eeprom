@@ -170,6 +170,7 @@ public:
 
 };
 
+#if defined(SPARK)
 /**
  * A flash device that delegates to the EEPROM wiring implementation.
  */
@@ -243,6 +244,7 @@ public:
     }
 
 };
+#endif
 
 #include "flashee-eeprom-impl.h"
 
@@ -618,6 +620,7 @@ Must align on a page boundary.
         return new PageSpanFlashDevice(*multi);
     }
 
+#if defined(SPARK)
     /**
      * Create a new flash device based on the built-in EEPROM class.
      * @param start The offset in emulated eeprom the device memory should start at.
@@ -628,6 +631,7 @@ Must align on a page boundary.
         FlashDevice* base = new EepromFlashDevice();
         return new FlashDeviceRegion(*base, start, end);
     }
+#endif
 
     /**
      * Creates a circular buffer that uses the pages given for storage.
