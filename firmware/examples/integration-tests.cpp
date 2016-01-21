@@ -24,7 +24,7 @@
 #include <memory>
 
 #include "flashee-eeprom/flashee-eeprom.h"
-#include "spark-unit.h"
+#include "flashee-eeprom/spark-unit.h"
 
 using namespace Flashee;
 
