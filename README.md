@@ -1,3 +1,5 @@
+NB: This repo isn't actively maintained, although PRs are still welcome. It served a useful purpose back in 20214, filling a gap in the Spark (later Particle) firmware API where EEPROM emulation was not supported. It was also a good exercise in creating a hardware-centric project with cross-platform tests, rapid testing on the desktop of hardware-neutral features. I extended the library with FAT filesystem support, and implemented "Minibox" - a 2014 miniature dropbox clone. This demonstrates multiple technologies working together, such as embedded unit tests, REST WebServer, wear-levelled flash storage etc. to arrive at a proof-of-concept solution.
+
 flashee
 =======
 
